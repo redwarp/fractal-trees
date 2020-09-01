@@ -1,11 +1,34 @@
-use std::fs::File;
 use std::fs::create_dir_all;
+use std::fs::File;
 use std::io::Write;
 
 use skia_safe::{Canvas, Color, EncodedImageFormat, Paint, Surface};
 
 const ANG: f64 = 20.0;
 const BASE_LENGTH: f64 = 10.0;
+
+#[derive(Debug)]
+struct Rect {
+    left: f64,
+    top: f64,
+    right: f64,
+    bottom: f64,
+}
+
+impl Rect {
+    fn new() -> Self {
+        Rect {
+            left: 0.0,
+            top: 0.0,
+            right: 0.0,
+            bottom: 0.0,
+        }
+    }
+
+    fn center_x(&self) -> f64 {
+        (self.right + self.left) / 2.0
+    }
+}
 
 fn main() {
     let width = 1920;
@@ -18,22 +41,51 @@ fn main() {
 
     let canvas = surface.canvas();
     canvas.clear(Color::WHITE);
+    let mut tree_rect = Rect::new();
 
-    let mut test = |x1: f64, y1: f64, x2: f64, y2: f64, depth:u32| {
+    println!("Before {:?}", tree_rect);
+
+    let mut calc = |x1: f64, y1: f64, x2: f64, y2: f64, _depth: u32| {
+        let xmin = min(x1, x2);
+        let ymin = min(y1, y2);
+        let xmax = max(x1, x2);
+        let ymax = max(y1, y2);
+
+        tree_rect.left = if xmin < tree_rect.left {
+            xmin
+        } else {
+            tree_rect.left
+        };
+        tree_rect.right = if xmax > tree_rect.right {
+            xmax
+        } else {
+            tree_rect.right
+        };
+        tree_rect.top = if ymin < tree_rect.top {
+            ymin
+        } else {
+            tree_rect.top
+        };
+        tree_rect.bottom = if ymax > tree_rect.bottom {
+            ymax
+        } else {
+            tree_rect.bottom
+        };
+    };
+    let mut draw = |x1: f64, y1: f64, x2: f64, y2: f64, depth: u32| {
         paint.set_stroke_width(depth as f32);
         let first = (x1 as f32, y1 as f32);
         let second = (x2 as f32, y2 as f32);
         canvas.draw_line(first, second, &paint);
     };
 
-    parse_fractal_tree(
-        (width / 2) as f64,
-        height as f64,
-        0.0,
-        8,
-        BASE_LENGTH,
-        &mut test,
-    );
+    parse_fractal_tree(0.0, 0.0, 0.0, 8, BASE_LENGTH, &mut calc);
+
+    let tree_trunk_x = width as f64 / 2.0 - tree_rect.center_x();
+
+    parse_fractal_tree(tree_trunk_x, height as f64, 0.0, 8, BASE_LENGTH, &mut draw);
+
+    println!("After {:?}", tree_rect);
 
     create_dir_all("rendering").unwrap();
     let file_name = "rendering/tree.png";
@@ -125,5 +177,21 @@ fn draw_fractal_tree(
             canvas,
             paint,
         );
+    }
+}
+
+fn min(a: f64, b: f64) -> f64 {
+    if a < b {
+        a
+    } else {
+        b
+    }
+}
+
+fn max(a: f64, b: f64) -> f64 {
+    if a >= b {
+        a
+    } else {
+        b
     }
 }
