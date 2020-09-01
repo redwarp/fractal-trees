@@ -1,0 +1,15 @@
+[package]
+name = "rust-skia-test"
+version = "0.1.0"
+authors = ["Armin Sander <armin@replicator.org>"]
+edition = "2018"
+
+[features]
+default = []
+shaper = ['skia-safe/shaper']
+svg = ['skia-safe/svg']
+vulkan = ['skia-safe/vulkan']
+
+[dependencies]
+skia-safe = { version = "0.33.0", features = [] }
+
