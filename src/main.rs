@@ -32,7 +32,7 @@ fn main() {
     let mut root_rect = Rect::new(0.0, 0.0, 0.0, 0.0);
 
     let mut calc_tree = |x1: f32, y1: f32, x2: f32, y2: f32, _depth: u32, rect: &mut Rect| {
-        bound_branch(rect, x1, y1, x2, y2);
+        bound_branch(x1, y1, x2, y2, rect);
     };
     parse_fractal_tree(
         0.0,
@@ -151,7 +151,7 @@ fn parse_fractal_tree<Block, Param>(
     }
 }
 
-fn bound_branch(rect: &mut Rect, x1: f32, y1: f32, x2: f32, y2: f32) {
+fn bound_branch(x1: f32, y1: f32, x2: f32, y2: f32, rect: &mut Rect) {
     let xmin = x1.min(x2);
     let ymin = y1.min(y2);
     let xmax = x1.max(x2);
