@@ -2,7 +2,7 @@ use std::fs::create_dir_all;
 use std::fs::File;
 use std::io::Write;
 
-use skia_safe::{Canvas, Color, EncodedImageFormat, Paint, Rect, Surface};
+use skia_safe::{Color, EncodedImageFormat, Paint, Rect, Surface};
 
 const ANG: f64 = 20.0;
 const BASE_LENGTH: f32 = 10.0;
@@ -31,20 +31,26 @@ fn main() {
     let mut tree_rect = Rect::new(0.0, 0.0, 0.0, 0.0);
     let mut root_rect = Rect::new(0.0, 0.0, 0.0, 0.0);
 
-    let mut calc_tree = |x1: f32, y1: f32, x2: f32, y2: f32, _depth: u32| {
-        bound_branch(&mut tree_rect, x1, y1, x2, y2);
+    let mut calc_tree = |x1: f32, y1: f32, x2: f32, y2: f32, _depth: u32, rect: &mut Rect| {
+        bound_branch(rect, x1, y1, x2, y2);
     };
-    parse_fractal_tree(0.0, 0.0, 0.0, tree_depth, BASE_LENGTH, &mut calc_tree);
+    parse_fractal_tree(
+        0.0,
+        0.0,
+        0.0,
+        tree_depth,
+        BASE_LENGTH,
+        &mut tree_rect,
+        &mut calc_tree,
+    );
 
-    let mut calc_tree = |x1: f32, y1: f32, x2: f32, y2: f32, _depth: u32| {
-        bound_branch(&mut root_rect, x1, y1, x2, y2);
-    };
     parse_fractal_tree(
         0.0,
         0.0,
         0.0,
         root_depth,
         BASE_LENGTH * 0.75,
+        &mut root_rect,
         &mut calc_tree,
     );
 
@@ -52,10 +58,16 @@ fn main() {
     let tree_trunk_x = width as f32 / 2.0 - tree_rect.center_x();
     let earth_level = (height as f32 + tree_rect.height() - root_rect.height()) / 2.0;
 
+    // Draw the ground.
+    canvas.draw_rect(
+        Rect::new(0.0, earth_level, width as f32, height as f32),
+        &paint,
+    );
+
     // Draw the upper tree.
     paint.set_color(TREE_AND_EARTH_COLOR);
-    let mut draw = |x1: f32, y1: f32, x2: f32, y2: f32, depth: u32| {
-        paint.set_stroke_width((depth as f32).powf(1.2));
+    let mut draw = |x1: f32, y1: f32, x2: f32, y2: f32, depth: u32, paint: &mut Paint| {
+        paint.set_stroke_width((depth as f32).powf(1.1));
         let first = (x1 as f32, y1 as f32);
         let second = (x2 as f32, y2 as f32);
         canvas.draw_line(first, second, &paint);
@@ -67,23 +79,12 @@ fn main() {
         0.0,
         tree_depth,
         BASE_LENGTH,
+        &mut paint,
         &mut draw,
-    );
-
-    // Draw the ground.
-    canvas.draw_rect(
-        Rect::new(0.0, earth_level, width as f32, height as f32),
-        &paint,
     );
 
     // Draw the roots
     paint.set_color(ROOT_COLOR);
-    let mut draw = |x1: f32, y1: f32, x2: f32, y2: f32, depth: u32| {
-        paint.set_stroke_width((depth as f32).powf(1.2));
-        let first = (x1 as f32, y1 as f32);
-        let second = (x2 as f32, y2 as f32);
-        canvas.draw_line(first, second, &paint);
-    };
 
     parse_fractal_tree(
         tree_trunk_x,
@@ -91,6 +92,7 @@ fn main() {
         180.0,
         root_depth,
         BASE_LENGTH * 0.75,
+        &mut paint,
         &mut draw,
     );
 
@@ -109,20 +111,21 @@ fn main() {
     }
 }
 
-fn parse_fractal_tree<Block>(
+fn parse_fractal_tree<Block, Param>(
     x1: f32,
     y1: f32,
     angle: f64,
     depth: u32,
     base_length: f32,
+    param: &mut Param,
     block: &mut Block,
 ) where
-    Block: FnMut(f32, f32, f32, f32, u32),
+    Block: FnMut(f32, f32, f32, f32, u32, &mut Param),
 {
     let x2 = x1 + angle.to_radians().sin() as f32 * depth as f32 * base_length;
     let y2 = y1 - angle.to_radians().cos() as f32 * depth as f32 * base_length;
 
-    block(x1, y1, x2, y2, depth);
+    block(x1, y1, x2, y2, depth, param);
 
     let alternate = if depth % 2 == 0 { 1.0 } else { -1.0 };
 
@@ -133,6 +136,7 @@ fn parse_fractal_tree<Block>(
             angle - ANG,
             depth - 1,
             base_length * (1.0 + alternate * 0.1),
+            param,
             block,
         );
         parse_fractal_tree(
@@ -141,74 +145,17 @@ fn parse_fractal_tree<Block>(
             angle + ANG,
             depth - 1,
             base_length * (1.0 - alternate * 0.1),
+            param,
             block,
         );
-    }
-}
-
-#[allow(dead_code)]
-fn draw_fractal_tree(
-    x1: f64,
-    y1: f64,
-    angle: f64,
-    depth: u32,
-    base_length: f64,
-    canvas: &mut Canvas,
-    paint: &mut Paint,
-) {
-    let x2 = x1 + angle.to_radians().sin() * depth as f64 * base_length;
-    let y2 = y1 - angle.to_radians().cos() * depth as f64 * base_length;
-
-    paint.set_stroke_width(depth as f32);
-    let first = (x1 as f32, y1 as f32);
-    let second = (x2 as f32, y2 as f32);
-    canvas.draw_line(first, second, &paint);
-
-    let alternate = if depth % 2 == 0 { 1.0 } else { -1.0 };
-
-    if depth > 0 {
-        draw_fractal_tree(
-            x2,
-            y2,
-            angle - ANG,
-            depth - 1,
-            base_length * (1.0 + alternate * 0.1),
-            canvas,
-            paint,
-        );
-        draw_fractal_tree(
-            x2,
-            y2,
-            angle + ANG,
-            depth - 1,
-            base_length * (1.0 - alternate * 0.1),
-            canvas,
-            paint,
-        );
-    }
-}
-
-fn min(a: f32, b: f32) -> f32 {
-    if a < b {
-        a
-    } else {
-        b
-    }
-}
-
-fn max(a: f32, b: f32) -> f32 {
-    if a >= b {
-        a
-    } else {
-        b
     }
 }
 
 fn bound_branch(rect: &mut Rect, x1: f32, y1: f32, x2: f32, y2: f32) {
-    let xmin = min(x1, x2);
-    let ymin = min(y1, y2);
-    let xmax = max(x1, x2);
-    let ymax = max(y1, y2);
+    let xmin = x1.min(x2);
+    let ymin = y1.min(y2);
+    let xmax = x1.max(x2);
+    let ymax = y1.max(y2);
 
     rect.left = if xmin < rect.left { xmin } else { rect.left };
     rect.right = if xmax > rect.right { xmax } else { rect.right };
