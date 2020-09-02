@@ -19,13 +19,30 @@ fn main() {
     tree::draw_tree(canvas);
 
     // Save the result.
-    create_dir_all("rendering").unwrap();
+
+    match create_dir_all("rendering") {
+        Err(_e) => {
+            eprintln!("ERROR: Coudn't create the `rendering` directory");
+            std::process::exit(1)
+        }
+        Ok(()) => (),
+    }
+
     let file_name = "rendering/tree.png";
-    let mut file = File::create(file_name).unwrap();
+    let mut file = match File::create(file_name) {
+        Err(_e) => {
+            eprintln!("ERROR: failed to create the file {}", file_name);
+            std::process::exit(1)
+        }
+        Ok(file) => file,
+    };
     let image = surface.image_snapshot();
     match image.encode_to_data(EncodedImageFormat::PNG) {
         Some(data) => {
-            file.write_all(data.as_bytes()).unwrap();
+            match file.write_all(data.as_bytes()) {
+                Err(_e) => eprintln!("ERROR: failed to write in file `{}`", file_name),
+                Ok(()) => (),
+            };
         }
         None => {
             eprintln!("ERROR: failed to encode image as PNG.");
