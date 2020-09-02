@@ -5,7 +5,7 @@ use std::io::Write;
 use skia_safe::{EncodedImageFormat, Paint, Surface};
 mod tree;
 
-fn main() {
+fn main() -> Result<(), String> {
     let width = 1920;
     let height = 1080;
     let mut paint = Paint::default();
@@ -21,31 +21,27 @@ fn main() {
     // Save the result.
 
     match create_dir_all("rendering") {
-        Err(_e) => {
-            eprintln!("ERROR: Coudn't create the `rendering` directory");
-            std::process::exit(1)
-        }
+        Err(_e) => return Err(format!("ERROR: Coudn't create the `rendering` directory")),
         Ok(()) => (),
     }
 
     let file_name = "rendering/tree.png";
     let mut file = match File::create(file_name) {
-        Err(_e) => {
-            eprintln!("ERROR: failed to create the file {}", file_name);
-            std::process::exit(1)
-        }
+        Err(_e) => return Err(format!("ERROR: failed to create the file {}", file_name)),
         Ok(file) => file,
     };
     let image = surface.image_snapshot();
     match image.encode_to_data(EncodedImageFormat::PNG) {
         Some(data) => {
             match file.write_all(data.as_bytes()) {
-                Err(_e) => eprintln!("ERROR: failed to write in file `{}`", file_name),
+                Err(_e) => return Err(format!("ERROR: failed to write in file `{}`", file_name)),
                 Ok(()) => (),
             };
         }
         None => {
-            eprintln!("ERROR: failed to encode image as PNG.");
+            return Err(format!("ERROR: failed to encode image as PNG."));
         }
-    }
+    };
+
+    Ok(())
 }
