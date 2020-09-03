@@ -3,10 +3,29 @@ use std::fs::File;
 use std::io::Write;
 
 use skia_safe::{Canvas, EncodedImageFormat, Paint, Surface};
+mod mountain;
 mod tree;
+mod utils;
+
+struct Painting<'a> {
+    draw_fn: fn(&mut Canvas) -> (),
+    output: &'a str,
+}
 
 fn main() -> Result<(), String> {
-    draw(tree::draw_tree, "tree")
+    let paintings = vec![
+        Painting::new(tree::draw, "tree"),
+        Painting::new(mountain::draw, "mountain"),
+    ];
+
+    for painting in &paintings {
+        match draw(painting.draw_fn, painting.output) {
+            Err(e) => return Err(e),
+            Ok(()) => (),
+        };
+    }
+
+    Ok(())
 }
 
 fn draw(draw_fn: fn(&mut Canvas) -> (), output: &str) -> Result<(), String> {
@@ -53,4 +72,10 @@ fn draw(draw_fn: fn(&mut Canvas) -> (), output: &str) -> Result<(), String> {
     };
 
     Ok(())
+}
+
+impl Painting<'_> {
+    fn new(draw_fn: fn(&mut Canvas) -> (), output: &str) -> Painting {
+        Painting { draw_fn, output }
+    }
 }

@@ -1,5 +1,7 @@
 use skia_safe::{Canvas, Color, Paint, Rect};
 
+use crate::utils::Bounded;
+
 const ANG: f64 = 20.0;
 const BASE_LENGTH: f32 = 10.0;
 const SKY_COLOR: Color = Color::new(0xfffceccb);
@@ -7,13 +9,12 @@ const TREE_AND_EARTH_COLOR: Color = Color::BLACK;
 const ROOT_COLOR: Color = Color::RED;
 const DEPTH: u32 = 10;
 
-pub fn draw_tree(canvas: &mut Canvas) {
+pub fn draw(canvas: &mut Canvas) {
     let mut paint = Paint::default();
     paint.set_anti_alias(true);
-
-    let size = canvas.base_layer_size();
-    let width = size.width;
-    let height = size.height;
+    
+    let width = canvas.width();
+    let height = canvas.height();
 
     let tree_depth = DEPTH;
     let root_depth = (DEPTH * 3) / 4;
@@ -49,12 +50,12 @@ pub fn draw_tree(canvas: &mut Canvas) {
     );
 
     // Set the center of the tree, and earth level, so that the drawing will be perfectly centered.
-    let tree_trunk_x = width as f32 / 2.0 - tree_rect.center_x();
-    let earth_level = (height as f32 + tree_rect.height() - root_rect.height()) / 2.0;
+    let tree_trunk_x = width / 2.0 - tree_rect.center_x();
+    let earth_level = (height + tree_rect.height() - root_rect.height()) / 2.0;
 
     // Draw the ground.
     canvas.draw_rect(
-        Rect::new(0.0, earth_level, width as f32, height as f32),
+        Rect::new(0.0, earth_level, width, height),
         &paint,
     );
 
