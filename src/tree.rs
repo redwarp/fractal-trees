@@ -12,7 +12,7 @@ const DEPTH: u32 = 10;
 pub fn draw(canvas: &mut Canvas) {
     let mut paint = Paint::default();
     paint.set_anti_alias(true);
-    
+
     let width = canvas.width();
     let height = canvas.height();
 
@@ -54,10 +54,7 @@ pub fn draw(canvas: &mut Canvas) {
     let earth_level = (height + tree_rect.height() - root_rect.height()) / 2.0;
 
     // Draw the ground.
-    canvas.draw_rect(
-        Rect::new(0.0, earth_level, width, height),
-        &paint,
-    );
+    canvas.draw_rect(Rect::new(0.0, earth_level, width, height), &paint);
 
     // Draw the upper tree.
     paint.set_color(TREE_AND_EARTH_COLOR);

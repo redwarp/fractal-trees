@@ -3,10 +3,10 @@ use std::fs::File;
 use std::io::Write;
 
 use skia_safe::{Canvas, EncodedImageFormat, Paint, Surface};
+mod geometry;
 mod mountain;
 mod tree;
 mod utils;
-mod geometry;
 
 struct Painting<'a> {
     draw_fn: fn(&mut Canvas) -> (),
