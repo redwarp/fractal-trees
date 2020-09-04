@@ -6,6 +6,7 @@ use skia_safe::{Canvas, EncodedImageFormat, Paint, Surface};
 mod mountain;
 mod tree;
 mod utils;
+mod geometry;
 
 struct Painting<'a> {
     draw_fn: fn(&mut Canvas) -> (),
@@ -44,7 +45,7 @@ fn draw(draw_fn: fn(&mut Canvas) -> (), output: &str) -> Result<(), String> {
     // Save the result.
 
     match create_dir_all("rendering") {
-        Err(_e) => return Err(format!("ERROR: Coudn't create the `rendering` directory")),
+        Err(_e) => return Err("ERROR: Coudn\'t create the `rendering` directory".to_string()),
         Ok(()) => (),
     }
 
