@@ -1,11 +1,12 @@
 use skia_safe::{Canvas, Paint, Point};
 use vector2d::Vector2D;
 
+#[derive(Copy, Clone, Debug)]
 pub struct Segment {
-    xa: f32,
-    ya: f32,
-    xb: f32,
-    yb: f32,
+    pub xa: f32,
+    pub ya: f32,
+    pub xb: f32,
+    pub yb: f32,
 }
 
 impl Segment {
@@ -18,10 +19,35 @@ impl Segment {
     }
 
     pub fn center(&self) -> Point {
+        self.point_at_position(0.5)
+    }
+
+    pub fn point_at_position(&self, position: f32) -> Point {
         Point::new(
-            self.xa + (self.xb - self.xa) / 2.0,
-            self.ya + (self.yb - self.ya) / 2.0,
+            self.xa + (self.xb - self.xa) * position,
+            self.ya + (self.yb - self.ya) * position,
         )
+    }
+
+    pub fn a(&self) -> Point {
+        Point::new(self.xa, self.ya)
+    }
+
+    pub fn b(&self) -> Point {
+        Point::new(self.xb, self.yb)
+    }
+
+    pub fn to_vector2d(&self) -> Vector2D<f32> {
+        Vector2D::new(self.xb - self.xa, self.yb - self.ya)
+    }
+
+    pub fn normal(&self) -> Vector2D<f32> {
+        let vector: Vector2D<f32> = self.to_vector2d();
+        vector.normal()
+    }
+
+    pub fn length(&self) -> f32 {
+        self.to_vector2d().length()
     }
 }
 
@@ -31,14 +57,25 @@ impl From<Segment> for Vector2D<f32> {
     }
 }
 
-pub trait SegmentDrawing {
+pub trait ExtendedDraw {
     fn draw_segment(&mut self, segment: Segment, paint: &Paint) -> ();
 }
 
-impl SegmentDrawing for Canvas {
+impl ExtendedDraw for Canvas {
     fn draw_segment(&mut self, segment: Segment, paint: &Paint) -> () {
         let (p1, p2) = segment.points();
         self.draw_line(p1, p2, paint);
+    }
+}
+
+pub trait VectorMove {
+    fn move_along(self, vector: &Vector2D<f32>, distance: f32) -> Self;
+}
+
+impl VectorMove for Point {
+    fn move_along(self, vector: &Vector2D<f32>, distance: f32) -> Self {
+        let vector = vector.normalise();
+        Point::new(self.x + vector.x * distance, self.y + vector.y * distance)
     }
 }
 
@@ -62,5 +99,41 @@ mod test {
 
         assert_eq!(2.5, center.x);
         assert_eq!(1.5, center.y);
+    }
+
+    #[test]
+    fn center_negative_segment() {
+        let segment = Segment::new(4.0, 2.0, 1.0, 1.0);
+        let center = segment.center();
+
+        assert_eq!(2.5, center.x);
+        assert_eq!(1.5, center.y);
+    }
+
+    #[test]
+    fn point_at_position_quarter() {
+        let segment = Segment::new(1.0, 1.0, 4.0, 2.0);
+        let center = segment.point_at_position(0.25);
+
+        assert_eq!(1.75, center.x);
+        assert_eq!(1.25, center.y);
+    }
+
+    #[test]
+    fn point_at_position_quarter_of_negative_segment() {
+        let segment = Segment::new(4.0, 2.0, 1.0, 1.0);
+        let center = segment.point_at_position(0.25);
+
+        assert_eq!(3.25, center.x);
+        assert_eq!(1.75, center.y);
+    }
+
+    #[test]
+    fn normal() {
+        let segment = Segment::new(1.0, 1.0, 4.0, 1.0);
+        let normal = segment.normal();
+
+        assert_eq!(0.0, normal.x);
+        assert_eq!(3.0, normal.y);
     }
 }
