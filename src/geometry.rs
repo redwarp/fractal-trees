@@ -136,4 +136,13 @@ mod test {
         assert_eq!(0.0, normal.x);
         assert_eq!(3.0, normal.y);
     }
+
+    #[test]
+    fn move_along_point(){
+        let point = Point::new(10.0, 7.0);
+        let moved_point = point.move_along(&Vector2D::new(2.0, 0.0), 5.0);
+
+        assert_eq!(15.0, moved_point.x);
+        assert_eq!(7.0, moved_point.y);
+    }
 }
