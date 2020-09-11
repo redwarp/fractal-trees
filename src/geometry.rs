@@ -69,11 +69,11 @@ impl ExtendedDraw for Canvas {
 }
 
 pub trait VectorMove {
-    fn move_along(self, vector: &Vector2D<f32>, distance: f32) -> Self;
+    fn move_along(self, vector: Vector2D<f32>, distance: f32) -> Self;
 }
 
 impl VectorMove for Point {
-    fn move_along(self, vector: &Vector2D<f32>, distance: f32) -> Self {
+    fn move_along(self, vector: Vector2D<f32>, distance: f32) -> Self {
         let vector = vector.normalise();
         Point::new(self.x + vector.x * distance, self.y + vector.y * distance)
     }
@@ -138,9 +138,9 @@ mod test {
     }
 
     #[test]
-    fn move_along_point(){
+    fn move_along_point() {
         let point = Point::new(10.0, 7.0);
-        let moved_point = point.move_along(&Vector2D::new(2.0, 0.0), 5.0);
+        let moved_point = point.move_along(Vector2D::new(2.0, 0.0), 5.0);
 
         assert_eq!(15.0, moved_point.x);
         assert_eq!(7.0, moved_point.y);

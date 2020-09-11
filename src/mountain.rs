@@ -33,7 +33,7 @@ fn draw_mountain(canvas: &mut Canvas, origin: Point, width: f32, paint: &Paint) 
 
     let summit = segment
         .point_at_position(0.45)
-        .move_along(&segment.normal(), -segment.length() * 1.2);
+        .move_along(segment.normal(), -segment.length() * 1.2);
     println!("Summit: {:?}", summit);
 
     path.line_to(summit);
