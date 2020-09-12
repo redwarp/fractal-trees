@@ -66,6 +66,14 @@ impl From<Segment> for Vector2D<f32> {
     }
 }
 
+impl From<Segment> for Line {
+    fn from(segment: Segment) -> Self {
+        let m = (segment.yb - segment.ya) / (segment.xb - segment.xa);
+        let p = segment.ya - m * segment.xa;
+        Line::new(m, p)
+    }
+}
+
 pub trait ExtendedDraw {
     fn draw_segment(&mut self, segment: Segment, paint: &Paint) -> ();
 }
@@ -85,6 +93,27 @@ impl VectorMove for Point {
     fn move_along(self, vector: Vector2D<f32>, distance: f32) -> Self {
         let vector = vector.normalise();
         Point::new(self.x + vector.x * distance, self.y + vector.y * distance)
+    }
+}
+
+pub struct Line {
+    pub m: f32,
+    pub p: f32,
+}
+
+impl Line {
+    pub fn new(m: f32, p: f32) -> Self {
+        Self { m, p }
+    }
+
+    pub fn intersection(self, other: Line) -> Result<Point, &'static str> {
+        if self.m == other.m {
+            return Err("The two lines are parallel");
+        };
+
+        let x = (self.p - other.p) / (other.m - self.m);
+        let y = self.m * x + self.p;
+        Ok(Point::new(x, y))
     }
 }
 
@@ -153,5 +182,23 @@ mod test {
 
         assert_eq!(15.0, moved_point.x);
         assert_eq!(7.0, moved_point.y);
+    }
+
+    #[test]
+    fn lines_intersection_has_intersection() {
+        let line1 = Line::new(1.0, -4.0);
+        let line2 = Line::new(-2.0, 5.0);
+        let intersection = line1.intersection(line2).unwrap();
+
+        assert_eq!(3.0, intersection.x);
+        assert_eq!(-1.0, intersection.y);
+    }
+
+    #[test]
+    fn segment_into_line() {
+        let line: Line = Segment::new(0.0, 0.0, 2.0, 1.0).into();
+
+        assert_eq!(0.5, line.m);
+        assert_eq!(0.0, line.p);
     }
 }
