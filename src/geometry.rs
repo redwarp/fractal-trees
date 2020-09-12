@@ -14,6 +14,15 @@ impl Segment {
         Self { xa, ya, xb, yb }
     }
 
+    pub fn from_points(a: Point, b: Point) -> Self {
+        Self {
+            xa: a.x,
+            ya: a.y,
+            xb: b.x,
+            yb: b.y,
+        }
+    }
+
     pub fn points(&self) -> (Point, Point) {
         (Point::new(self.xa, self.ya), Point::new(self.xb, self.yb))
     }

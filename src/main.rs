@@ -30,6 +30,8 @@ fn main() -> Result<(), String> {
 }
 
 fn draw(draw_fn: fn(&mut Canvas) -> (), output: &str) -> Result<(), String> {
+    println!("Drawing {}", output);
+
     let width = 1920;
     let height = 1080;
     let mut paint = Paint::default();
