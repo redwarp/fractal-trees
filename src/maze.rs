@@ -159,6 +159,20 @@ impl Maze {
     }
 }
 
+pub fn draw(canvas: &mut Canvas) {
+    let rng = StdRng::seed_from_u64(42);
+    // let rng = StdRng::from_entropy();
+
+    canvas.clear(SKY_COLOR);
+    let width = ((canvas.width() - MAZE_BORDER * 2.0) / MAZE_TO_PIXEL) as u32;
+    let height = ((canvas.height() - MAZE_BORDER * 2.0) / MAZE_TO_PIXEL) as u32;
+
+    let maze = Maze::new(width, height, rng);
+
+    println!("{}", maze);
+    maze.draw(canvas);
+}
+
 impl Display for Maze {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let mut description = format!("Maze of dimension {}x{}", self.width, self.height);
@@ -183,20 +197,6 @@ impl Display for Maze {
 
         write!(f, "{}", description)
     }
-}
-
-pub fn draw(canvas: &mut Canvas) {
-    let rng = StdRng::seed_from_u64(42);
-    // let rng = StdRng::from_entropy();
-
-    canvas.clear(SKY_COLOR);
-    let width = ((canvas.width() - MAZE_BORDER * 2.0) / MAZE_TO_PIXEL) as u32;
-    let height = ((canvas.height() - MAZE_BORDER * 2.0) / MAZE_TO_PIXEL) as u32;
-
-    let maze = Maze::new(width, height, rng);
-
-    println!("{}", maze);
-    maze.draw(canvas);
 }
 
 /// Probably one of the ugliest randering algorithm ever!
