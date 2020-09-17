@@ -18,6 +18,7 @@ impl Bounded for Canvas {
 pub trait Drawable {
     fn draw(&self, canvas: &mut Canvas);
 
+    #[allow(unused_variables)]
     fn draw_with_paint(&self, canvas: &mut Canvas, paint: &mut Paint) {
         self.draw(canvas);
     }

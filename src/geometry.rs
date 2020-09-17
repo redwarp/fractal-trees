@@ -106,6 +106,7 @@ impl Line {
         Self { m, p }
     }
 
+    #[allow(dead_code)]
     pub fn intersection(self, other: Line) -> Result<Point, &'static str> {
         if self.m == other.m {
             return Err("The two lines are parallel");

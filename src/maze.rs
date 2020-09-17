@@ -62,6 +62,8 @@ impl Maze {
         maze
     }
 
+    /// Uses the Randomized depth-first search found on wikipedia (https://en.wikipedia.org/wiki/Maze_generation_algorithm)
+    /// to fill in the maze.
     fn initialise_maze(mut self, mut rng: StdRng) -> Self {
         let mut cell_positions: Vec<(u32, u32)> = Vec::new();
         // Initialize first cell position.
@@ -174,6 +176,7 @@ pub fn draw(canvas: &mut Canvas) {
     maze.draw(canvas);
 }
 
+/// Probably one of the ugliest randering algorithm ever!
 impl Drawable for Maze {
     fn draw(&self, canvas: &mut Canvas) {
         let mut paint = Paint::default();
@@ -220,7 +223,6 @@ impl Drawable for Maze {
                 }
                 if current_x == width - 1 && segment_started || !segment_finished {
                     end = Point::new((width - 1) as f32, y as f32);
-                    segment_finished = true;
                 }
 
                 if origin != end {
@@ -262,7 +264,6 @@ impl Drawable for Maze {
                 }
                 if current_y == height - 1 && segment_started || !segment_finished {
                     end = Point::new(x as f32, (height - 1) as f32);
-                    segment_finished = true;
                 }
 
                 if origin != end {
