@@ -32,7 +32,7 @@ fn main() -> Result<(), String> {
 }
 
 fn draw(draw_fn: fn(&mut Canvas) -> (), output: &str) -> Result<(), String> {
-    println!("Drawing {}", output);
+    println!("===\nDrawing {}", output);
 
     let width = 1920;
     let height = 1080;
@@ -75,6 +75,8 @@ fn draw(draw_fn: fn(&mut Canvas) -> (), output: &str) -> Result<(), String> {
             return Err(format!("ERROR: failed to encode image as PNG."));
         }
     };
+
+    println!("===\n");
 
     Ok(())
 }

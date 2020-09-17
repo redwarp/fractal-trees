@@ -51,27 +51,28 @@ struct Maze {
 }
 
 impl Maze {
-    fn new(width: u32, height: u32, rng: StdRng) -> Self {
+    fn new(width: u32, height: u32, mut rng: StdRng) -> Self {
         let maze = Maze {
-            width: width,
-            height: height,
+            width,
+            height,
             data: vec![Cell::blank(); ((width * 2 + 1) * (height * 2 + 1)) as usize],
         }
-        .initialise_maze(rng);
+        .initialise_maze(&mut rng)
+        .collapse_entry_and_exit(&mut rng);
 
         maze
     }
 
     /// Uses the Randomized depth-first search found on wikipedia (https://en.wikipedia.org/wiki/Maze_generation_algorithm)
     /// to fill in the maze.
-    fn initialise_maze(mut self, mut rng: StdRng) -> Self {
+    fn initialise_maze(mut self, rng: &mut StdRng) -> Self {
         let mut cell_positions: Vec<(u32, u32)> = Vec::new();
         // Initialize first cell position.
         cell_positions.push((rng.gen_range(0, self.width), rng.gen_range(0, self.height)));
 
         while !cell_positions.is_empty() {
             let current_cell = cell_positions.pop().unwrap();
-            match self.random_unvisted_neighboor(current_cell, &mut rng) {
+            match self.random_unvisted_neighboor(current_cell, rng) {
                 Some(other_cell) => {
                     cell_positions.push(current_cell);
                     self.collapse_wall_between(current_cell, other_cell);
@@ -109,6 +110,9 @@ impl Maze {
     fn get_any_cell(&self, true_x: usize, true_y: usize) -> &Cell {
         &self.data[true_y * (self.width as usize * 2 + 1) + true_x]
     }
+    fn get_any_cell_mut(&mut self, true_x: usize, true_y: usize) -> &mut Cell {
+        &mut self.data[true_y * (self.width as usize * 2 + 1) + true_x]
+    }
 
     fn collapse_wall_between(&mut self, cell_a: (u32, u32), cell_b: (u32, u32)) {
         let x = ((cell_a.0 * 2 + cell_b.0 * 2 + 2) / 2) as usize;
@@ -141,10 +145,29 @@ impl Maze {
             _ => Some(unvisited[rng.gen_range(0, unvisited.len())]),
         }
     }
+
+    fn collapse_entry_and_exit(mut self, rng: &mut StdRng) -> Self {
+        let west_wall = rng.gen_range(0, self.height);
+        let east_wall = rng.gen_range(0, self.height);
+
+        self.get_any_cell_mut(0, (west_wall * 2 + 1) as usize)
+            .cell_type = CellType::Floor;
+        self.get_any_cell_mut((self.width * 2) as usize, (east_wall * 2 + 1) as usize)
+            .cell_type = CellType::Floor;
+
+        self
+    }
 }
 
 impl Display for Maze {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let mut description = format!("Maze of dimension {}x{}", self.width, self.height);
+        if self.width > 20 || self.height > 20 {
+            return write!(f, "{}", description);
+        };
+
+        description.push('\n');
+
         let mut description = String::new();
         for (pos, cell) in self.data.iter().enumerate() {
             description.push(match cell.cell_type {
@@ -172,7 +195,7 @@ pub fn draw(canvas: &mut Canvas) {
 
     let maze = Maze::new(width, height, rng);
 
-    // println!("{}", maze);
+    println!("{}", maze);
     maze.draw(canvas);
 }
 
@@ -223,9 +246,10 @@ impl Drawable for Maze {
                 }
                 if current_x == width - 1 && segment_started || !segment_finished {
                     end = Point::new((width - 1) as f32, y as f32);
+                    segment_finished = true
                 }
 
-                if origin != end {
+                if origin != end && segment_started && segment_finished {
                     let segment = Segment::from_points(origin, end);
                     canvas.draw_segment(segment, &paint);
                     segment_started = false;
@@ -264,9 +288,10 @@ impl Drawable for Maze {
                 }
                 if current_y == height - 1 && segment_started || !segment_finished {
                     end = Point::new(x as f32, (height - 1) as f32);
+                    segment_finished = true
                 }
 
-                if origin != end {
+                if origin != end && segment_started && segment_finished {
                     let segment = Segment::from_points(origin, end);
                     canvas.draw_segment(segment, &paint);
                     segment_started = false;
