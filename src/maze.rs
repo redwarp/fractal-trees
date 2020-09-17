@@ -1,8 +1,16 @@
 use std::fmt::Display;
 
 use rand::rngs::StdRng;
-use rand::{Rng, RngCore, SeedableRng};
-use skia_safe::Canvas;
+use rand::{Rng, SeedableRng};
+use skia_safe::{Canvas, Color, Paint, PaintStyle, Point};
+
+use crate::geometry::{ExtendedDraw, Segment};
+use crate::utils::Bounded;
+use crate::utils::Drawable;
+
+const SKY_COLOR: Color = Color::new(0xfffceccb);
+const MAZE_TO_PIXEL: f32 = 10.0;
+const MAZE_BORDER: f32 = 20.0;
 
 #[derive(Copy, Clone)]
 struct Cell {
@@ -19,7 +27,7 @@ impl Cell {
     }
 }
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, PartialEq)]
 enum CellType {
     Wall,
     Floor,
@@ -96,6 +104,10 @@ impl Maze {
             .get_mut(((y * 2 + 1) * (self.width * 2 + 1) + (x * 2 + 1)) as usize)
     }
 
+    fn get_any_cell(&self, true_x: usize, true_y: usize) -> &Cell {
+        &self.data[true_y * (self.width as usize * 2 + 1) + true_x]
+    }
+
     fn collapse_wall_between(&mut self, cell_a: (u32, u32), cell_b: (u32, u32)) {
         let x = ((cell_a.0 * 2 + cell_b.0 * 2 + 2) / 2) as usize;
         let y = ((cell_a.1 * 2 + cell_b.1 * 2 + 2) / 2) as usize;
@@ -150,8 +162,122 @@ impl Display for Maze {
 
 pub fn draw(canvas: &mut Canvas) {
     let rng = StdRng::seed_from_u64(42);
-    let rng = StdRng::from_entropy();
+    // let rng = StdRng::from_entropy();
 
-    let maze = Maze::new(8, 8, rng);
-    println!("{}", maze);
+    canvas.clear(SKY_COLOR);
+    let width = ((canvas.width() - MAZE_BORDER * 2.0) / MAZE_TO_PIXEL) as u32;
+    let height = ((canvas.height() - MAZE_BORDER * 2.0) / MAZE_TO_PIXEL) as u32;
+
+    let maze = Maze::new(width, height, rng);
+
+    // println!("{}", maze);
+    maze.draw(canvas);
+}
+
+impl Drawable for Maze {
+    fn draw(&self, canvas: &mut Canvas) {
+        let mut paint = Paint::default();
+        paint.set_anti_alias(true);
+        paint.set_style(PaintStyle::Stroke);
+
+        canvas.save();
+        canvas.translate((MAZE_BORDER, MAZE_BORDER));
+        let scale_x = (canvas.width() - MAZE_BORDER * 2.0)
+            / ((canvas.width() - MAZE_BORDER * 2.0) / MAZE_TO_PIXEL * 2.0 + 1.0);
+        let scale_y = (canvas.height() - MAZE_BORDER * 2.0)
+            / ((canvas.height() - MAZE_BORDER * 2.0) / MAZE_TO_PIXEL * 2.0 + 1.0);
+
+        paint.set_stroke_width(0.5);
+
+        canvas.scale((scale_x, scale_y));
+
+        let width = (self.width * 2 + 1) as usize;
+        let height = (self.height * 2 + 1) as usize;
+
+        for y in 0..height {
+            let mut current_x = 0;
+            let mut segment_started = false;
+            let mut segment_finished = false;
+
+            let mut origin = Point::new(current_x as f32, y as f32);
+            let mut end = origin.clone();
+            while current_x < width - 1 {
+                for x in current_x..width {
+                    current_x = x;
+                    let cell_type: CellType = self.get_any_cell(x, y).cell_type;
+                    match (cell_type, segment_started) {
+                        (CellType::Wall, false) => {
+                            origin = Point::new(x as f32, y as f32);
+                            segment_started = true;
+                        }
+                        (CellType::Floor, true) => {
+                            end = Point::new((x - 1) as f32, y as f32);
+                            segment_finished = true;
+                            break;
+                        }
+                        _ => {}
+                    };
+                }
+                if current_x == width - 1 && segment_started || !segment_finished {
+                    end = Point::new((width - 1) as f32, y as f32);
+                    segment_finished = true;
+                }
+
+                if origin != end {
+                    let segment = Segment::from_points(origin, end);
+                    canvas.draw_segment(segment, &paint);
+                    segment_started = false;
+                    segment_finished = false;
+                } else {
+                    current_x = current_x + 1;
+                    segment_started = false;
+                    segment_finished = false;
+                }
+            }
+        }
+
+        for x in 0..width {
+            let mut current_y = 0;
+            let mut segment_started = false;
+            let mut segment_finished = false;
+
+            let mut origin = Point::new(x as f32, current_y as f32);
+            let mut end = origin.clone();
+            while current_y < height - 1 {
+                for y in current_y..height {
+                    current_y = y;
+                    let cell_type: CellType = self.get_any_cell(x, y).cell_type;
+                    match (cell_type, segment_started) {
+                        (CellType::Wall, false) => {
+                            origin = Point::new(x as f32, y as f32);
+                            segment_started = true;
+                        }
+                        (CellType::Floor, true) => {
+                            end = Point::new(x as f32, (y - 1) as f32);
+                            segment_finished = true;
+                            break;
+                        }
+                        _ => {}
+                    };
+                }
+                if current_y == height - 1 && segment_started || !segment_finished {
+                    end = Point::new(x as f32, (height - 1) as f32);
+                    segment_finished = true;
+                }
+
+                if origin != end {
+                    let segment = Segment::from_points(origin, end);
+                    canvas.draw_segment(segment, &paint);
+                    segment_started = false;
+                    segment_finished = false;
+                } else {
+                    current_y = current_y + 1;
+                    segment_started = false;
+                    segment_finished = false;
+                }
+            }
+        }
+
+        canvas.restore();
+    }
 }
