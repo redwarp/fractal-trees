@@ -10,7 +10,8 @@ use crate::utils::Drawable;
 
 const SKY_COLOR: Color = Color::new(0xfffceccb);
 const MAZE_TO_PIXEL: f32 = 10.0;
-const MAZE_BORDER: f32 = 20.0;
+const MAZE_BORDER: f32 = 40.0;
+const STROKE_WIDTH: f32 = 0.5;
 
 #[derive(Copy, Clone)]
 struct Cell {
@@ -208,12 +209,14 @@ impl Drawable for Maze {
 
         canvas.save();
         canvas.translate((MAZE_BORDER, MAZE_BORDER));
-        let scale_x = (canvas.width() - MAZE_BORDER * 2.0)
-            / ((canvas.width() - MAZE_BORDER * 2.0) / MAZE_TO_PIXEL * 2.0 + 1.0);
-        let scale_y = (canvas.height() - MAZE_BORDER * 2.0)
-            / ((canvas.height() - MAZE_BORDER * 2.0) / MAZE_TO_PIXEL * 2.0 + 1.0);
 
-        paint.set_stroke_width(0.5);
+        let scale_x = (canvas.width() - MAZE_BORDER * 2.0) / (self.width as f32 * 2.0 + 1.0);
+        let scale_y = (canvas.height() - MAZE_BORDER * 2.0) / (self.height as f32 * 2.0 + 1.0);
+
+        canvas.translate((0.5 * scale_x, 0.5 * scale_y));
+        paint.set_stroke_width(STROKE_WIDTH);
+        
+        let half_stroke = STROKE_WIDTH * 0.45;
 
         canvas.scale((scale_x, scale_y));
 
@@ -250,7 +253,8 @@ impl Drawable for Maze {
                 }
 
                 if origin != end && segment_started && segment_finished {
-                    let segment = Segment::from_points(origin, end);
+                    let segment =
+                        Segment::new(origin.x - half_stroke, origin.y, end.x + half_stroke, end.y);
                     canvas.draw_segment(segment, &paint);
                     segment_started = false;
                     segment_finished = false;
@@ -292,7 +296,8 @@ impl Drawable for Maze {
                 }
 
                 if origin != end && segment_started && segment_finished {
-                    let segment = Segment::from_points(origin, end);
+                    let segment =
+                        Segment::new(origin.x, origin.y - half_stroke, end.x, end.y + half_stroke);
                     canvas.draw_segment(segment, &paint);
                     segment_started = false;
                     segment_finished = false;
