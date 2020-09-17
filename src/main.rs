@@ -72,7 +72,7 @@ fn draw(draw_fn: fn(&mut Canvas) -> (), output: &str) -> Result<(), String> {
             };
         }
         None => {
-            return Err(format!("ERROR: failed to encode image as PNG."));
+            return Err("ERROR: failed to encode image as PNG.".to_string());
         }
     };
 

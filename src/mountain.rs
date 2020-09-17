@@ -17,24 +17,64 @@ pub fn draw(canvas: &mut Canvas) {
     // Fill with the sky color.
     canvas.clear(SKY_COLOR);
 
-    let base = Segment::new(200.0, 1000.0, 800.0, 1000.0);
+    let base = Segment::new(1100.0, canvas.height(), 1600.0, canvas.height());
     let summit = base
         .point_at_position(0.45)
-        .move_along(base.normal(), -base.length() * 0.8);
-    draw_mountain(canvas, base, summit, EARTH_COLOR, &mut paint, 0);
+        .move_along(base.normal(), -base.length() * 0.9);
+    draw_mountain(
+        canvas,
+        base,
+        summit,
+        Color::new(0xff333333),
+        Color::WHITE,
+        &mut paint,
+        0,
+    );
+
+    let base = Segment::new(700.0, canvas.height(), 1350.0, canvas.height());
+    let summit = base
+        .point_at_position(0.45)
+        .move_along(base.normal(), -base.length() * 0.9);
+    draw_mountain(
+        canvas,
+        base,
+        summit,
+        Color::new(0xff191919),
+        Color::WHITE,
+        &mut paint,
+        0,
+    );
+
+    let base = Segment::new(200.0, canvas.height(), 1000.0, canvas.height());
+    let summit = base
+        .point_at_position(0.45)
+        .move_along(base.normal(), -base.length() * 0.9);
+    draw_mountain(
+        canvas,
+        base,
+        summit,
+        EARTH_COLOR,
+        Color::WHITE,
+        &mut paint,
+        0,
+    );
 }
 
 fn draw_mountain(
     canvas: &mut Canvas,
     base: Segment,
     summit: Point,
-    color: Color,
+    dark_color: Color,
+    light_color: Color,
     paint: &mut Paint,
     count: u32,
 ) {
+    let color = if count % 2 == 1 {
+        light_color
+    } else {
+        dark_color
+    };
     paint.set_color(color);
-
-    // canvas.draw_segment(segment, &paint);
 
     let mut path: Path = Path::new();
     path.move_to(base.a());
@@ -47,19 +87,14 @@ fn draw_mountain(
     canvas.draw_path(&path, paint);
 
     if count < 2 {
-        let color = if count % 2 == 0 {
-            Color::WHITE
-        } else {
-            Color::BLACK
-        };
-
         let side_a = Segment::from_points(base.a(), summit).point_at_position(0.60);
         let side_b = Segment::from_points(base.b(), summit).point_at_position(0.60);
         draw_mountain(
             canvas,
             Segment::from_points(summit, side_a),
             side_b,
-            color,
+            dark_color,
+            light_color,
             paint,
             count + 1,
         );

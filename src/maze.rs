@@ -73,17 +73,14 @@ impl Maze {
 
         while !cell_positions.is_empty() {
             let current_cell = cell_positions.pop().unwrap();
-            match self.random_unvisted_neighboor(current_cell, rng) {
-                Some(other_cell) => {
-                    cell_positions.push(current_cell);
-                    self.collapse_wall_between(current_cell, other_cell);
-                    if let Some(cell) = self.get_cell_mut(other_cell.0, other_cell.1) {
-                        cell.visited = true;
-                        cell.cell_type = CellType::Floor;
-                    }
-                    cell_positions.push(other_cell);
+            if let Some(other_cell) = self.random_unvisted_neighboor(current_cell, rng) {
+                cell_positions.push(current_cell);
+                self.collapse_wall_between(current_cell, other_cell);
+                if let Some(cell) = self.get_cell_mut(other_cell.0, other_cell.1) {
+                    cell.visited = true;
+                    cell.cell_type = CellType::Floor;
                 }
-                None => {}
+                cell_positions.push(other_cell);
             }
         }
 
@@ -215,7 +212,7 @@ impl Drawable for Maze {
 
         canvas.translate((0.5 * scale_x, 0.5 * scale_y));
         paint.set_stroke_width(STROKE_WIDTH);
-        
+
         let half_stroke = STROKE_WIDTH * 0.45;
 
         canvas.scale((scale_x, scale_y));
@@ -302,7 +299,7 @@ impl Drawable for Maze {
                     segment_started = false;
                     segment_finished = false;
                 } else {
-                    current_y = current_y + 1;
+                    current_y += 1;
                     segment_started = false;
                     segment_finished = false;
                 }
