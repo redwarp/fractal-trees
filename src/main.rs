@@ -4,6 +4,7 @@ use std::io::Write;
 
 use skia_safe::{Canvas, EncodedImageFormat, Paint, Surface};
 mod geometry;
+mod maze;
 mod mountain;
 mod tree;
 mod utils;
@@ -17,6 +18,7 @@ fn main() -> Result<(), String> {
     let paintings = vec![
         Painting::new(tree::draw, "tree"),
         Painting::new(mountain::draw, "mountain"),
+        Painting::new(maze::draw, "maze"),
     ];
 
     for painting in &paintings {

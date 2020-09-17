@@ -13,4 +13,5 @@ vulkan = ['skia-safe/vulkan']
 [dependencies]
 skia-safe = { version = "0.33.0", features = [] }
 vector2d = "2.2.0"
+rand = "0.7.3"
 
