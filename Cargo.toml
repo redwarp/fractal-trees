@@ -11,7 +11,7 @@ svg = ['skia-safe/svg']
 vulkan = ['skia-safe/vulkan']
 
 [dependencies]
-skia-safe = { version = "0.33.0", features = [] }
+skia-safe = { version = "0.34.0", features = [] }
 vector2d = "2.2.0"
 rand = "0.7.3"
 
