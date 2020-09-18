@@ -8,9 +8,13 @@ use crate::geometry::Segment;
 use crate::utils::Bounded;
 use crate::utils::Drawable;
 
-const SKY_COLOR: Color = Color::new(0xfffceccb);
+/// Background color, rendered behind the maze.
+const BACKGROUND_COLOR: Color = Color::new(0xfffceccb);
+/// The higher the number, the less complex the maze.
 const MAZE_TO_PIXEL: f32 = 10.0;
+/// Adjust border to frame the maze in a nice way.
 const MAZE_BORDER: f32 = 40.0;
+/// Adjust for wider or thinner walls.
 const STROKE_WIDTH: f32 = 0.5;
 
 #[derive(Copy, Clone)]
@@ -34,6 +38,8 @@ enum CellType {
     Floor,
 }
 
+/// Maze structure. Can you get out?
+///
 /// A maze or labyrinth of size 3 * 3 might generate the following structure
 ///
 /// ```text
@@ -185,7 +191,7 @@ pub fn draw(canvas: &mut Canvas) {
     // Using a set seed to have a reproducable maze.
     let rng = StdRng::seed_from_u64(42);
 
-    canvas.clear(SKY_COLOR);
+    canvas.clear(BACKGROUND_COLOR);
     let width = ((canvas.width() - MAZE_BORDER * 2.0) / MAZE_TO_PIXEL) as u32;
     let height = ((canvas.height() - MAZE_BORDER * 2.0) / MAZE_TO_PIXEL) as u32;
 
