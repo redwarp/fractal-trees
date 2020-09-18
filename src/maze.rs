@@ -38,7 +38,7 @@ struct Position(usize, usize);
 struct Wall(Position, Position);
 
 impl Wall {
-    fn into_segment(&self, half_stroke: f32) -> Option<Segment> {
+    fn as_segment(&self, half_stroke: f32) -> Option<Segment> {
         let Wall(a, b) = self;
 
         if a.0 != b.0 {
@@ -331,10 +331,7 @@ impl Drawable for Maze {
 
         let mut path = Path::new();
 
-        for segment in walls
-            .iter()
-            .filter_map(|wall| wall.into_segment(half_stroke))
-        {
+        for segment in walls.iter().filter_map(|wall| wall.as_segment(half_stroke)) {
             path.move_to(segment.a());
             path.line_to(segment.b());
         }
