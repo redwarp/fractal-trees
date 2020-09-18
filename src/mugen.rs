@@ -13,7 +13,6 @@ pub fn draw(canvas: &mut Canvas) {
     paint.set_anti_alias(true);
     paint.set_style(PaintStyle::Stroke);
     paint.set_stroke_width(0.1);
-    paint.set_color(Color::BLACK);
 
     let mut path = Path::new();
     path.move_to(get_coords(-std::f32::consts::PI));
@@ -31,6 +30,13 @@ pub fn draw(canvas: &mut Canvas) {
     let scale = canvas.width().min(canvas.height()) * SCALE;
     canvas.scale((scale, scale));
 
+    canvas.save();
+    canvas.translate((0.01, 0.01));
+    paint.set_color(Color::RED);
+    canvas.draw_path(&path, &paint);
+    canvas.restore();
+
+    paint.set_color(Color::BLACK);
     canvas.draw_path(&path, &paint);
 
     canvas.restore();
