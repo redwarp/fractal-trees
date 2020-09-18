@@ -6,6 +6,7 @@ use skia_safe::{Canvas, EncodedImageFormat, Paint, Surface};
 mod geometry;
 mod maze;
 mod mountain;
+mod mugen;
 mod tree;
 mod utils;
 
@@ -19,6 +20,7 @@ fn main() -> Result<(), String> {
         Painting::new(tree::draw, "tree"),
         Painting::new(mountain::draw, "mountain"),
         Painting::new(maze::draw, "maze"),
+        Painting::new(mugen::draw, "mugen"),
     ];
 
     for painting in &paintings {
