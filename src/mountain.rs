@@ -58,6 +58,10 @@ pub fn draw(canvas: &mut Canvas) {
         &mut paint,
         0,
     );
+
+    let sun_position = (canvas.width() - 350.0, 350.0);
+    paint.set_color(Color::RED);
+    canvas.draw_circle(sun_position, 125.0, &paint);
 }
 
 fn draw_mountain(
