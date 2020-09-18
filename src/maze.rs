@@ -35,6 +35,34 @@ impl Cell {
 #[derive(Copy, Clone, PartialEq)]
 struct Position(usize, usize);
 
+struct Wall(Position, Position);
+
+impl Wall {
+    fn into_segment(&self, half_stroke: f32) -> Option<Segment> {
+        let Wall(a, b) = self;
+
+        if a.0 != b.0 {
+            // Horizontal wall
+            Some(Segment::new(
+                a.0 as f32 - half_stroke,
+                a.1 as f32,
+                b.0 as f32 + half_stroke,
+                b.1 as f32,
+            ))
+        } else if a.1 != b.1 {
+            // Vertical wall
+            Some(Segment::new(
+                a.0 as f32,
+                a.1 as f32 - half_stroke,
+                b.0 as f32,
+                b.1 as f32 + half_stroke,
+            ))
+        } else {
+            None
+        }
+    }
+}
+
 #[derive(Copy, Clone, PartialEq)]
 enum CellType {
     Wall,
@@ -244,9 +272,7 @@ impl Drawable for Maze {
 
         canvas.scale((scale_x, scale_y));
 
-        let mut segments: Vec<Segment> = Vec::new();
-        let mut lines: Vec<(Position, Position)> = Vec::new();
-        let mut columns: Vec<(Position, Position)> = Vec::new();
+        let mut walls: Vec<Wall> = Vec::new();
 
         let width = (self.width * 2 + 1) as usize;
         let height = (self.height * 2 + 1) as usize;
@@ -266,13 +292,13 @@ impl Drawable for Maze {
                     CellType::Floor => {
                         // Finish segment
                         if let (Some(a), Some(b)) = in_progress_segment {
-                            lines.push((a, b));
+                            walls.push(Wall(a, b));
                         }
                         in_progress_segment = (None, None)
                     }
                 }
                 if let (Some(a), Some(b)) = in_progress_segment {
-                    lines.push((a, b));
+                    walls.push(Wall(a, b));
                 }
             }
         }
@@ -292,58 +318,23 @@ impl Drawable for Maze {
                     CellType::Floor => {
                         // Finish segment
                         if let (Some(a), Some(b)) = in_progress_segment {
-                            columns.push((a, b));
+                            walls.push(Wall(a, b));
                         }
                         in_progress_segment = (None, None)
                     }
                 }
                 if let (Some(a), Some(b)) = in_progress_segment {
-                    columns.push((a, b));
+                    walls.push(Wall(a, b));
                 }
             }
         }
 
-        segments.append(
-            &mut lines
-                .iter()
-                .filter_map(|(a, b)| {
-                    if a == b {
-                        // No need to draw single walls.
-                        None
-                    } else {
-                        Some(Segment::new(
-                            a.0 as f32 - half_stroke,
-                            a.1 as f32,
-                            b.0 as f32 + half_stroke,
-                            b.1 as f32,
-                        ))
-                    }
-                })
-                .collect(),
-        );
-
-        segments.append(
-            &mut columns
-                .iter()
-                .filter_map(|(a, b)| {
-                    if a == b {
-                        // No need to draw single walls.
-                        None
-                    } else {
-                        Some(Segment::new(
-                            a.0 as f32,
-                            a.1 as f32 - half_stroke,
-                            b.0 as f32,
-                            b.1 as f32 + half_stroke,
-                        ))
-                    }
-                })
-                .collect(),
-        );
-
         let mut path = Path::new();
 
-        for segment in segments {
+        for segment in walls
+            .iter()
+            .filter_map(|wall| wall.into_segment(half_stroke))
+        {
             path.move_to(segment.a());
             path.line_to(segment.b());
         }
