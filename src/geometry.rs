@@ -75,11 +75,11 @@ impl From<Segment> for Line {
 }
 
 pub trait ExtendedDraw {
-    fn draw_segment(&mut self, segment: Segment, paint: &Paint) -> ();
+    fn draw_segment(&mut self, segment: Segment, paint: &Paint);
 }
 
 impl ExtendedDraw for Canvas {
-    fn draw_segment(&mut self, segment: Segment, paint: &Paint) -> () {
+    fn draw_segment(&mut self, segment: Segment, paint: &Paint) {
         let (p1, p2) = segment.points();
         self.draw_line(p1, p2, paint);
     }
@@ -108,7 +108,7 @@ impl Line {
 
     #[allow(dead_code)]
     pub fn intersection(self, other: Line) -> Result<Point, &'static str> {
-        if self.m == other.m {
+        if (self.m - other.m).abs() < f32::EPSILON {
             return Err("The two lines are parallel");
         };
 

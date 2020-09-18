@@ -59,15 +59,13 @@ struct Maze {
 
 impl Maze {
     fn new(width: u32, height: u32, mut rng: StdRng) -> Self {
-        let maze = Maze {
+        Maze {
             width,
             height,
             data: vec![Cell::blank(); ((width * 2 + 1) * (height * 2 + 1)) as usize],
         }
         .initialise_maze(&mut rng)
-        .collapse_entry_and_exit(&mut rng);
-
-        maze
+        .collapse_entry_and_exit(&mut rng)
     }
 
     /// Uses the Randomized depth-first search found on wikipedia (https://en.wikipedia.org/wiki/Maze_generation_algorithm)
@@ -118,7 +116,7 @@ impl Maze {
     }
 
     fn get_any_cell(&self, true_x: usize, true_y: usize) -> Option<&Cell> {
-        if true_x >= self.width as usize * 2 + 1 || true_y >= self.height as usize * 2 + 1 {
+        if true_x > self.width as usize * 2 || true_y > self.height as usize * 2 {
             return None;
         }
 
@@ -126,7 +124,7 @@ impl Maze {
             .get(true_y * (self.width as usize * 2 + 1) + true_x)
     }
     fn get_any_cell_mut(&mut self, true_x: usize, true_y: usize) -> Option<&mut Cell> {
-        if true_x >= self.width as usize * 2 + 1 || true_y >= self.height as usize * 2 + 1 {
+        if true_x > self.width as usize * 2 || true_y > self.height as usize * 2 {
             return None;
         }
 
