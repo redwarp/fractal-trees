@@ -2,9 +2,9 @@ use std::fmt::Display;
 
 use rand::rngs::StdRng;
 use rand::{Rng, SeedableRng};
-use skia_safe::{Canvas, Color, Paint, PaintStyle, Point};
+use skia_safe::{Canvas, Color, Paint, PaintStyle, Path};
 
-use crate::geometry::{ExtendedDraw, Segment};
+use crate::geometry::Segment;
 use crate::utils::Bounded;
 use crate::utils::Drawable;
 
@@ -122,27 +122,31 @@ impl Maze {
             .get_mut(true_y * (self.width as usize * 2 + 1) + true_x)
     }
 
-    fn collapse_wall_between(&mut self, cell_a: (u32, u32), cell_b: (u32, u32)) {
-        let x = ((cell_a.0 * 2 + cell_b.0 * 2 + 2) / 2) as usize;
-        let y = ((cell_a.1 * 2 + cell_b.1 * 2 + 2) / 2) as usize;
+    fn collapse_wall_between(&mut self, position_a: (u32, u32), position_b: (u32, u32)) {
+        let x = ((position_a.0 * 2 + position_b.0 * 2 + 2) / 2) as usize;
+        let y = ((position_a.1 * 2 + position_b.1 * 2 + 2) / 2) as usize;
         let index = y * (self.width as usize * 2 + 1) + x;
 
         self.data[index].cell_type = CellType::Floor;
     }
 
-    fn random_unvisted_neighboor(&self, cell: (u32, u32), rng: &mut StdRng) -> Option<(u32, u32)> {
+    fn random_unvisted_neighboor(
+        &self,
+        position: (u32, u32),
+        rng: &mut StdRng,
+    ) -> Option<(u32, u32)> {
         let mut unvisited: Vec<(u32, u32)> = Vec::with_capacity(4);
-        unvisited.push((cell.0, cell.1 + 1));
-        if cell.1 > 0 {
-            unvisited.push((cell.0, cell.1 - 1));
+        unvisited.push((position.0, position.1 + 1));
+        if position.1 > 0 {
+            unvisited.push((position.0, position.1 - 1));
         };
-        unvisited.push((cell.0 + 1, cell.1));
-        if cell.0 > 0 {
-            unvisited.push((cell.0 - 1, cell.1));
+        unvisited.push((position.0 + 1, position.1));
+        if position.0 > 0 {
+            unvisited.push((position.0 - 1, position.1));
         }
 
-        unvisited.retain(|cell_position| {
-            match self.get_floor_cell(cell_position.0, cell_position.1) {
+        unvisited.retain(|position| {
+            match self.get_floor_cell(position.0, position.1) {
                 Some(cell) => !cell.visited,
                 None => false,
             }
@@ -172,8 +176,8 @@ impl Maze {
 }
 
 pub fn draw(canvas: &mut Canvas) {
+    // Using a set seed to have a reproducable maze.
     let rng = StdRng::seed_from_u64(42);
-    // let rng = StdRng::from_entropy();
 
     canvas.clear(SKY_COLOR);
     let width = ((canvas.width() - MAZE_BORDER * 2.0) / MAZE_TO_PIXEL) as u32;
@@ -211,7 +215,6 @@ impl Display for Maze {
     }
 }
 
-/// Probably one of the ugliest randering algorithm ever!
 impl Drawable for Maze {
     fn draw(&self, canvas: &mut Canvas) {
         let mut paint = Paint::default();
@@ -231,94 +234,112 @@ impl Drawable for Maze {
 
         canvas.scale((scale_x, scale_y));
 
+        let mut segments: Vec<Segment> = Vec::new();
+        let mut lines: Vec<((usize, usize), (usize, usize))> = Vec::new();
+        let mut columns: Vec<((usize, usize), (usize, usize))> = Vec::new();
+
         let width = (self.width * 2 + 1) as usize;
         let height = (self.height * 2 + 1) as usize;
 
         for y in 0..height {
-            let mut current_x = 0;
-            let mut segment_started = false;
-            let mut segment_finished = false;
-
-            let mut origin = Point::new(current_x as f32, y as f32);
-            let mut end = origin.clone();
-            while current_x < width - 1 {
-                for x in current_x..width {
-                    current_x = x;
-                    let cell_type: CellType = self.get_any_cell(x, y).unwrap().cell_type;
-                    match (cell_type, segment_started) {
-                        (CellType::Wall, false) => {
-                            origin = Point::new(x as f32, y as f32);
-                            segment_started = true;
+            let mut in_progress_segment: (Option<(usize, usize)>, Option<(usize, usize)>) =
+                (None, None);
+            for x in 0..width {
+                let cell_type: CellType = self.get_any_cell(x, y).unwrap().cell_type;
+                match cell_type {
+                    CellType::Wall => {
+                        // Start or continue segment
+                        match in_progress_segment.0 {
+                            None => in_progress_segment.0 = Some((x, y)),
+                            Some(_) => in_progress_segment.1 = Some((x, y)),
                         }
-                        (CellType::Floor, true) => {
-                            end = Point::new((x - 1) as f32, y as f32);
-                            segment_finished = true;
-                            break;
+                    }
+                    CellType::Floor => {
+                        // Finish segment
+                        if let (Some(a), Some(b)) = in_progress_segment {
+                            lines.push((a, b));
                         }
-                        _ => {}
-                    };
+                        in_progress_segment = (None, None)
+                    }
                 }
-                if current_x == width - 1 && segment_started || !segment_finished {
-                    end = Point::new((width - 1) as f32, y as f32);
-                    segment_finished = true
-                }
-
-                if origin != end && segment_started && segment_finished {
-                    let segment =
-                        Segment::new(origin.x - half_stroke, origin.y, end.x + half_stroke, end.y);
-                    canvas.draw_segment(segment, &paint);
-                    segment_started = false;
-                    segment_finished = false;
-                } else {
-                    current_x = current_x + 1;
-                    segment_started = false;
-                    segment_finished = false;
+                if let (Some(a), Some(b)) = in_progress_segment {
+                    lines.push((a, b));
                 }
             }
         }
 
         for x in 0..width {
-            let mut current_y = 0;
-            let mut segment_started = false;
-            let mut segment_finished = false;
-
-            let mut origin = Point::new(x as f32, current_y as f32);
-            let mut end = origin.clone();
-            while current_y < height - 1 {
-                for y in current_y..height {
-                    current_y = y;
-                    let cell_type: CellType = self.get_any_cell(x, y).unwrap().cell_type;
-                    match (cell_type, segment_started) {
-                        (CellType::Wall, false) => {
-                            origin = Point::new(x as f32, y as f32);
-                            segment_started = true;
+            let mut in_progress_segment: (Option<(usize, usize)>, Option<(usize, usize)>) =
+                (None, None);
+            for y in 0..height {
+                let cell_type: CellType = self.get_any_cell(x, y).unwrap().cell_type;
+                match cell_type {
+                    CellType::Wall => {
+                        // Start or continue segment
+                        match in_progress_segment.0 {
+                            None => in_progress_segment.0 = Some((x, y)),
+                            Some(_) => in_progress_segment.1 = Some((x, y)),
                         }
-                        (CellType::Floor, true) => {
-                            end = Point::new(x as f32, (y - 1) as f32);
-                            segment_finished = true;
-                            break;
+                    }
+                    CellType::Floor => {
+                        // Finish segment
+                        if let (Some(a), Some(b)) = in_progress_segment {
+                            columns.push((a, b));
                         }
-                        _ => {}
-                    };
+                        in_progress_segment = (None, None)
+                    }
                 }
-                if current_y == height - 1 && segment_started || !segment_finished {
-                    end = Point::new(x as f32, (height - 1) as f32);
-                    segment_finished = true
-                }
-
-                if origin != end && segment_started && segment_finished {
-                    let segment =
-                        Segment::new(origin.x, origin.y - half_stroke, end.x, end.y + half_stroke);
-                    canvas.draw_segment(segment, &paint);
-                    segment_started = false;
-                    segment_finished = false;
-                } else {
-                    current_y += 1;
-                    segment_started = false;
-                    segment_finished = false;
+                if let (Some(a), Some(b)) = in_progress_segment {
+                    columns.push((a, b));
                 }
             }
         }
+
+        segments.append(
+            &mut lines
+                .iter()
+                .filter_map(|(a, b)| {
+                    if a == b {
+                        // No need to draw single walls.
+                        None
+                    } else {
+                        Some(Segment::new(
+                            a.0 as f32 - half_stroke,
+                            a.1 as f32,
+                            b.0 as f32 + half_stroke,
+                            b.1 as f32,
+                        ))
+                    }
+                })
+                .collect(),
+        );
+
+        segments.append(
+            &mut columns
+                .iter()
+                .filter_map(|(a, b)| {
+                    if a == b {
+                        // No need to draw single walls.
+                        None
+                    } else {
+                        Some(Segment::new(
+                            a.0 as f32,
+                            a.1 as f32 - half_stroke,
+                            b.0 as f32,
+                            b.1 as f32 + half_stroke,
+                        ))
+                    }
+                })
+                .collect(),
+        );
+
+        let mut path = Path::new();
+
+        for segment in segments {
+            path.move_to(segment.a());
+            path.line_to(segment.b());
+        }
+        canvas.draw_path(&path, &paint);
 
         canvas.restore();
     }
