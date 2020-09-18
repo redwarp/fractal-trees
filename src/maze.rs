@@ -73,14 +73,20 @@ impl Maze {
 
         while !cell_positions.is_empty() {
             let current_cell = cell_positions.pop().unwrap();
-            if let Some(other_cell) = self.random_unvisted_neighboor(current_cell, rng) {
+            if let Some(neighboor_cell_position) = self.random_unvisted_neighboor(current_cell, rng)
+            {
                 cell_positions.push(current_cell);
-                self.collapse_wall_between(current_cell, other_cell);
-                if let Some(cell) = self.get_floor_cell_mut(other_cell.0, other_cell.1) {
+                self.collapse_wall_between(current_cell, neighboor_cell_position);
+                if let Some(cell) =
+                    self.get_floor_cell_mut(neighboor_cell_position.0, neighboor_cell_position.1)
+                {
                     cell.visited = true;
+                    // As the maze is initialized with only wall, it's important to mark cells as floor.
+                    // We could also do a pass initially to put floor everywhere, but it's not needed as this algo gives us
+                    // the certainty that every cell will be visited anyway.
                     cell.cell_type = CellType::Floor;
                 }
-                cell_positions.push(other_cell);
+                cell_positions.push(neighboor_cell_position);
             }
         }
 
@@ -145,12 +151,12 @@ impl Maze {
             unvisited.push((position.0 - 1, position.1));
         }
 
-        unvisited.retain(|position| {
-            match self.get_floor_cell(position.0, position.1) {
+        unvisited.retain(
+            |position| match self.get_floor_cell(position.0, position.1) {
                 Some(cell) => !cell.visited,
                 None => false,
-            }
-        });
+            },
+        );
 
         match unvisited.len() {
             0 => None,
