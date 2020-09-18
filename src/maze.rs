@@ -76,7 +76,7 @@ impl Maze {
             if let Some(other_cell) = self.random_unvisted_neighboor(current_cell, rng) {
                 cell_positions.push(current_cell);
                 self.collapse_wall_between(current_cell, other_cell);
-                if let Some(cell) = self.get_cell_mut(other_cell.0, other_cell.1) {
+                if let Some(cell) = self.get_floor_cell_mut(other_cell.0, other_cell.1) {
                     cell.visited = true;
                     cell.cell_type = CellType::Floor;
                 }
@@ -87,7 +87,7 @@ impl Maze {
         self
     }
 
-    fn get_cell(&self, x: u32, y: u32) -> Option<&Cell> {
+    fn get_floor_cell(&self, x: u32, y: u32) -> Option<&Cell> {
         if x >= self.width || y >= self.height {
             return None;
         }
@@ -96,7 +96,7 @@ impl Maze {
             .get(((y * 2 + 1) * (self.width * 2 + 1) + (x * 2 + 1)) as usize)
     }
 
-    fn get_cell_mut(&mut self, x: u32, y: u32) -> Option<&mut Cell> {
+    fn get_floor_cell_mut(&mut self, x: u32, y: u32) -> Option<&mut Cell> {
         if x >= self.width || y >= self.height {
             return None;
         }
@@ -105,11 +105,21 @@ impl Maze {
             .get_mut(((y * 2 + 1) * (self.width * 2 + 1) + (x * 2 + 1)) as usize)
     }
 
-    fn get_any_cell(&self, true_x: usize, true_y: usize) -> &Cell {
-        &self.data[true_y * (self.width as usize * 2 + 1) + true_x]
+    fn get_any_cell(&self, true_x: usize, true_y: usize) -> Option<&Cell> {
+        if true_x >= self.width as usize * 2 + 1 || true_y >= self.height as usize * 2 + 1 {
+            return None;
+        }
+
+        self.data
+            .get(true_y * (self.width as usize * 2 + 1) + true_x)
     }
-    fn get_any_cell_mut(&mut self, true_x: usize, true_y: usize) -> &mut Cell {
-        &mut self.data[true_y * (self.width as usize * 2 + 1) + true_x]
+    fn get_any_cell_mut(&mut self, true_x: usize, true_y: usize) -> Option<&mut Cell> {
+        if true_x >= self.width as usize * 2 + 1 || true_y >= self.height as usize * 2 + 1 {
+            return None;
+        }
+
+        self.data
+            .get_mut(true_y * (self.width as usize * 2 + 1) + true_x)
     }
 
     fn collapse_wall_between(&mut self, cell_a: (u32, u32), cell_b: (u32, u32)) {
@@ -131,12 +141,12 @@ impl Maze {
             unvisited.push((cell.0 - 1, cell.1));
         }
 
-        unvisited.retain(
-            |cell_position| match self.get_cell(cell_position.0, cell_position.1) {
+        unvisited.retain(|cell_position| {
+            match self.get_floor_cell(cell_position.0, cell_position.1) {
                 Some(cell) => !cell.visited,
                 None => false,
-            },
-        );
+            }
+        });
 
         match unvisited.len() {
             0 => None,
@@ -148,10 +158,14 @@ impl Maze {
         let west_wall = rng.gen_range(0, self.height);
         let east_wall = rng.gen_range(0, self.height);
 
-        self.get_any_cell_mut(0, (west_wall * 2 + 1) as usize)
-            .cell_type = CellType::Floor;
-        self.get_any_cell_mut((self.width * 2) as usize, (east_wall * 2 + 1) as usize)
-            .cell_type = CellType::Floor;
+        if let Some(cell) = self.get_any_cell_mut(0, (west_wall * 2 + 1) as usize) {
+            cell.cell_type = CellType::Floor;
+        }
+        if let Some(cell) =
+            self.get_any_cell_mut((self.width * 2) as usize, (east_wall * 2 + 1) as usize)
+        {
+            cell.cell_type = CellType::Floor;
+        }
 
         self
     }
@@ -230,7 +244,7 @@ impl Drawable for Maze {
             while current_x < width - 1 {
                 for x in current_x..width {
                     current_x = x;
-                    let cell_type: CellType = self.get_any_cell(x, y).cell_type;
+                    let cell_type: CellType = self.get_any_cell(x, y).unwrap().cell_type;
                     match (cell_type, segment_started) {
                         (CellType::Wall, false) => {
                             origin = Point::new(x as f32, y as f32);
@@ -273,7 +287,7 @@ impl Drawable for Maze {
             while current_y < height - 1 {
                 for y in current_y..height {
                     current_y = y;
-                    let cell_type: CellType = self.get_any_cell(x, y).cell_type;
+                    let cell_type: CellType = self.get_any_cell(x, y).unwrap().cell_type;
                     match (cell_type, segment_started) {
                         (CellType::Wall, false) => {
                             origin = Point::new(x as f32, y as f32);
