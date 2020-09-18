@@ -33,6 +33,9 @@ impl Cell {
 }
 
 #[derive(Copy, Clone, PartialEq)]
+struct Position(usize, usize);
+
+#[derive(Copy, Clone, PartialEq)]
 enum CellType {
     Wall,
     Floor,
@@ -52,13 +55,13 @@ enum CellType {
 /// # # # # # # #
 /// ```
 struct Maze {
-    width: u32,
-    height: u32,
+    width: usize,
+    height: usize,
     data: Vec<Cell>,
 }
 
 impl Maze {
-    fn new(width: u32, height: u32, mut rng: StdRng) -> Self {
+    fn new(width: usize, height: usize, mut rng: StdRng) -> Self {
         Maze {
             width,
             height,
@@ -71,9 +74,12 @@ impl Maze {
     /// Uses the Randomized depth-first search found on wikipedia (https://en.wikipedia.org/wiki/Maze_generation_algorithm)
     /// to fill in the maze.
     fn initialise_maze(mut self, rng: &mut StdRng) -> Self {
-        let mut cell_positions: Vec<(u32, u32)> = Vec::new();
+        let mut cell_positions: Vec<Position> = Vec::new();
         // Initialize first cell position.
-        cell_positions.push((rng.gen_range(0, self.width), rng.gen_range(0, self.height)));
+        cell_positions.push(Position(
+            rng.gen_range(0, self.width),
+            rng.gen_range(0, self.height),
+        ));
 
         while !cell_positions.is_empty() {
             let current_cell = cell_positions.pop().unwrap();
@@ -81,9 +87,7 @@ impl Maze {
             {
                 cell_positions.push(current_cell);
                 self.collapse_wall_between(current_cell, neighboor_cell_position);
-                if let Some(cell) =
-                    self.get_floor_cell_mut(neighboor_cell_position.0, neighboor_cell_position.1)
-                {
+                if let Some(cell) = self.get_floor_cell_mut(neighboor_cell_position) {
                     cell.visited = true;
                     // As the maze is initialized with only wall, it's important to mark cells as floor.
                     // We could also do a pass initially to put floor everywhere, but it's not needed as this algo gives us
@@ -97,7 +101,8 @@ impl Maze {
         self
     }
 
-    fn get_floor_cell(&self, x: u32, y: u32) -> Option<&Cell> {
+    fn get_floor_cell(&self, position: Position) -> Option<&Cell> {
+        let Position(x, y) = position;
         if x >= self.width || y >= self.height {
             return None;
         }
@@ -106,7 +111,8 @@ impl Maze {
             .get(((y * 2 + 1) * (self.width * 2 + 1) + (x * 2 + 1)) as usize)
     }
 
-    fn get_floor_cell_mut(&mut self, x: u32, y: u32) -> Option<&mut Cell> {
+    fn get_floor_cell_mut(&mut self, position: Position) -> Option<&mut Cell> {
+        let Position(x, y) = position;
         if x >= self.width || y >= self.height {
             return None;
         }
@@ -132,7 +138,7 @@ impl Maze {
             .get_mut(true_y * (self.width as usize * 2 + 1) + true_x)
     }
 
-    fn collapse_wall_between(&mut self, position_a: (u32, u32), position_b: (u32, u32)) {
+    fn collapse_wall_between(&mut self, position_a: Position, position_b: Position) {
         let x = ((position_a.0 * 2 + position_b.0 * 2 + 2) / 2) as usize;
         let y = ((position_a.1 * 2 + position_b.1 * 2 + 2) / 2) as usize;
         let index = y * (self.width as usize * 2 + 1) + x;
@@ -140,27 +146,21 @@ impl Maze {
         self.data[index].cell_type = CellType::Floor;
     }
 
-    fn random_unvisted_neighboor(
-        &self,
-        position: (u32, u32),
-        rng: &mut StdRng,
-    ) -> Option<(u32, u32)> {
-        let mut unvisited: Vec<(u32, u32)> = Vec::with_capacity(4);
-        unvisited.push((position.0, position.1 + 1));
+    fn random_unvisted_neighboor(&self, position: Position, rng: &mut StdRng) -> Option<Position> {
+        let mut unvisited: Vec<Position> = Vec::with_capacity(4);
+        unvisited.push(Position(position.0, position.1 + 1));
         if position.1 > 0 {
-            unvisited.push((position.0, position.1 - 1));
+            unvisited.push(Position(position.0, position.1 - 1));
         };
-        unvisited.push((position.0 + 1, position.1));
+        unvisited.push(Position(position.0 + 1, position.1));
         if position.0 > 0 {
-            unvisited.push((position.0 - 1, position.1));
+            unvisited.push(Position(position.0 - 1, position.1));
         }
 
-        unvisited.retain(
-            |position| match self.get_floor_cell(position.0, position.1) {
-                Some(cell) => !cell.visited,
-                None => false,
-            },
-        );
+        unvisited.retain(|position| match self.get_floor_cell(*position) {
+            Some(cell) => !cell.visited,
+            None => false,
+        });
 
         match unvisited.len() {
             0 => None,
@@ -190,8 +190,8 @@ pub fn draw(canvas: &mut Canvas) {
     let rng = StdRng::seed_from_u64(42);
 
     canvas.clear(BACKGROUND_COLOR);
-    let width = ((canvas.width() - MAZE_BORDER * 2.0) / MAZE_TO_PIXEL) as u32;
-    let height = ((canvas.height() - MAZE_BORDER * 2.0) / MAZE_TO_PIXEL) as u32;
+    let width = ((canvas.width() - MAZE_BORDER * 2.0) / MAZE_TO_PIXEL) as usize;
+    let height = ((canvas.height() - MAZE_BORDER * 2.0) / MAZE_TO_PIXEL) as usize;
 
     let maze = Maze::new(width, height, rng);
 
@@ -245,23 +245,22 @@ impl Drawable for Maze {
         canvas.scale((scale_x, scale_y));
 
         let mut segments: Vec<Segment> = Vec::new();
-        let mut lines: Vec<((usize, usize), (usize, usize))> = Vec::new();
-        let mut columns: Vec<((usize, usize), (usize, usize))> = Vec::new();
+        let mut lines: Vec<(Position, Position)> = Vec::new();
+        let mut columns: Vec<(Position, Position)> = Vec::new();
 
         let width = (self.width * 2 + 1) as usize;
         let height = (self.height * 2 + 1) as usize;
 
         for y in 0..height {
-            let mut in_progress_segment: (Option<(usize, usize)>, Option<(usize, usize)>) =
-                (None, None);
+            let mut in_progress_segment: (Option<Position>, Option<Position>) = (None, None);
             for x in 0..width {
                 let cell_type: CellType = self.get_any_cell(x, y).unwrap().cell_type;
                 match cell_type {
                     CellType::Wall => {
                         // Start or continue segment
                         match in_progress_segment.0 {
-                            None => in_progress_segment.0 = Some((x, y)),
-                            Some(_) => in_progress_segment.1 = Some((x, y)),
+                            None => in_progress_segment.0 = Some(Position(x, y)),
+                            Some(_) => in_progress_segment.1 = Some(Position(x, y)),
                         }
                     }
                     CellType::Floor => {
@@ -279,16 +278,15 @@ impl Drawable for Maze {
         }
 
         for x in 0..width {
-            let mut in_progress_segment: (Option<(usize, usize)>, Option<(usize, usize)>) =
-                (None, None);
+            let mut in_progress_segment: (Option<Position>, Option<Position>) = (None, None);
             for y in 0..height {
                 let cell_type: CellType = self.get_any_cell(x, y).unwrap().cell_type;
                 match cell_type {
                     CellType::Wall => {
                         // Start or continue segment
                         match in_progress_segment.0 {
-                            None => in_progress_segment.0 = Some((x, y)),
-                            Some(_) => in_progress_segment.1 = Some((x, y)),
+                            None => in_progress_segment.0 = Some(Position(x, y)),
+                            Some(_) => in_progress_segment.1 = Some(Position(x, y)),
                         }
                     }
                     CellType::Floor => {
