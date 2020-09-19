@@ -24,7 +24,11 @@ fn main() -> Result<(), String> {
     ];
 
     for painting in &paintings {
-        match draw(painting.draw_fn, painting.output) {
+        match draw(painting.draw_fn, painting.output, (1920, 1080)) {
+            Err(e) => return Err(e),
+            Ok(()) => (),
+        };
+        match draw(painting.draw_fn, painting.output, (500, 500)) {
             Err(e) => return Err(e),
             Ok(()) => (),
         };
@@ -33,11 +37,10 @@ fn main() -> Result<(), String> {
     Ok(())
 }
 
-fn draw(draw_fn: fn(&mut Canvas) -> (), output: &str) -> Result<(), String> {
+fn draw(draw_fn: fn(&mut Canvas) -> (), output: &str, size: (i32, i32)) -> Result<(), String> {
     println!("===\nDrawing {}", output);
 
-    let width = 1920;
-    let height = 1080;
+    let (width, height) = size;
     let mut paint = Paint::default();
     paint.set_anti_alias(true);
 
@@ -55,9 +58,14 @@ fn draw(draw_fn: fn(&mut Canvas) -> (), output: &str) -> Result<(), String> {
         Ok(()) => (),
     }
 
-    let file_name = format!("rendering/{}.png", output);
+    let file_name = format!("rendering/{}_{}x{}.png", output, width, height);
     let mut file = match File::create(file_name) {
-        Err(_e) => return Err(format!("ERROR: failed to create the file `{}.png`", output)),
+        Err(_e) => {
+            return Err(format!(
+                "ERROR: failed to create the file `{}_{}x{}.png`",
+                output, width, height
+            ))
+        }
         Ok(file) => file,
     };
     let image = surface.image_snapshot();

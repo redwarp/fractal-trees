@@ -1,4 +1,4 @@
-use skia_safe::{Canvas, Color, Paint, Rect};
+use skia_safe::{Canvas, Color, Matrix, Paint, Rect};
 
 use crate::utils::Bounded;
 
@@ -8,13 +8,15 @@ const SKY_COLOR: Color = Color::new(0xfffceccb);
 const TREE_AND_EARTH_COLOR: Color = Color::BLACK;
 const ROOT_COLOR: Color = Color::RED;
 const DEPTH: u32 = 10;
+const IDEAL_WIDTH: f32 = 1920.0;
+const IDEAL_HEIGHT: f32 = 1080.0;
 
 pub fn draw(canvas: &mut Canvas) {
     let mut paint = Paint::default();
     paint.set_anti_alias(true);
 
-    let width = canvas.width();
-    let height = canvas.height();
+    let width = IDEAL_WIDTH;
+    let height = IDEAL_HEIGHT;
 
     let tree_depth = DEPTH;
     let root_depth = (DEPTH * 3) / 4;
@@ -53,8 +55,24 @@ pub fn draw(canvas: &mut Canvas) {
     let tree_trunk_x = width / 2.0 - tree_rect.center_x();
     let earth_level = (height + tree_rect.height() - root_rect.height()) / 2.0;
 
+    let scale = canvas.height() / height;
+    let shift_x = -(width * scale - canvas.width()) / 2.0;
+
+    let mut matrix = Matrix::new_identity();
+    matrix.post_scale((scale, scale), None);
+    matrix.post_translate((shift_x, 0.0));
+    canvas.set_matrix(&matrix);
+
     // Draw the ground.
-    canvas.draw_rect(Rect::new(0.0, earth_level, width, height), &paint);
+    canvas.draw_rect(
+        Rect::new(
+            shift_x / scale,
+            earth_level,
+            width + shift_x / scale,
+            height / scale,
+        ),
+        &paint,
+    );
 
     // Draw the upper tree.
     paint.set_color(TREE_AND_EARTH_COLOR);
