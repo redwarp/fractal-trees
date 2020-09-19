@@ -2,7 +2,7 @@ use std::fmt::Display;
 
 use rand::rngs::StdRng;
 use rand::{Rng, SeedableRng};
-use skia_safe::{Canvas, Color, Paint, PaintStyle, Path};
+use skia_safe::{Canvas, Paint, PaintStyle, Path};
 
 use crate::geometry::Segment;
 use crate::utils::{Bounded, Drawable, Palette};
