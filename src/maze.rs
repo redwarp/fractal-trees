@@ -37,6 +37,12 @@ struct Position(usize, usize);
 
 struct Wall(Position, Position);
 
+impl From<(usize, usize)> for Position {
+    fn from(point: (usize, usize)) -> Self {
+        Position(point.0, point.1)
+    }
+}
+
 impl Wall {
     fn as_segment(&self, half_stroke: f32) -> Option<Segment> {
         let Wall(a, b) = self;
@@ -86,6 +92,7 @@ struct Maze {
     width: usize,
     height: usize,
     data: Vec<Cell>,
+    path: Vec<Position>,
 }
 
 impl Maze {
@@ -94,9 +101,11 @@ impl Maze {
             width,
             height,
             data: vec![Cell::blank(); ((width * 2 + 1) * (height * 2 + 1)) as usize],
+            path: Vec::new(),
         }
         .initialise_maze(&mut rng)
         .collapse_entry_and_exit(&mut rng)
+        .solve()
     }
 
     /// Uses the Randomized depth-first search found on wikipedia (https://en.wikipedia.org/wiki/Maze_generation_algorithm)
@@ -208,6 +217,72 @@ impl Maze {
         {
             cell.cell_type = CellType::Floor;
         }
+
+        self
+    }
+
+    fn any_unvisted_neighboor(&self, position: Position) -> Option<Position> {
+        let mut unvisited: Vec<Position> = Vec::with_capacity(4);
+        unvisited.push(Position(position.0, position.1 + 1));
+        if position.1 > 0 {
+            unvisited.push(Position(position.0, position.1 - 1));
+        };
+        unvisited.push(Position(position.0 + 1, position.1));
+        if position.0 > 0 {
+            unvisited.push(Position(position.0 - 1, position.1));
+        }
+
+        unvisited.retain(|&Position(x, y)| match self.get_any_cell(x, y) {
+            Some(cell) => !cell.visited && cell.cell_type == CellType::Floor,
+            None => false,
+        });
+
+        match unvisited.len() {
+            0 => None,
+            _ => Some(unvisited.first().unwrap().clone()),
+        }
+    }
+
+    fn unvisit_all(&mut self) {
+        for cell in self.data.iter_mut() {
+            cell.visited = false;
+        }
+    }
+
+    fn solve(mut self) -> Self {
+        self.path.clear();
+        let height = self.height * 2 + 1;
+        let width = self.width * 2 + 1;
+        self.unvisit_all();
+
+        let mut start: Option<Position> = None;
+        for y in 0..height {
+            if let Some(cell) = self.get_any_cell(0, y) {
+                if cell.cell_type == CellType::Floor {
+                    start = Some(Position(0, y));
+                    break;
+                }
+            }
+        }
+        if start == None {
+            return self;
+        }
+
+        let mut current = start.unwrap();
+        self.path.push(current);
+        self.get_any_cell_mut(current.0, current.1).unwrap().visited = true;
+
+        while current.0 < width - 1 {
+            current = self.path.pop().unwrap();
+            if let Some(neighboor) = self.any_unvisted_neighboor(current) {
+                self.path.push(current);
+                if let Some(cell) = self.get_any_cell_mut(neighboor.0, neighboor.1) {
+                    cell.visited = true;
+                    self.path.push(neighboor);
+                }
+            }
+        }
+        self.path.push(current);
 
         self
     }
@@ -336,6 +411,20 @@ impl Drawable for Maze {
             path.line_to(segment.b());
         }
         canvas.draw_path(&path, &paint);
+
+        // Draw solution.
+        if let (Some(start), Some(end)) = (self.path.first(), self.path.last()) {
+            let mut path = Path::new();
+            path.move_to((start.0 as f32 - 2.0, start.1 as f32));
+
+            for position in &self.path[..] {
+                path.line_to((position.0 as f32, position.1 as f32));
+            }
+            path.line_to((end.0 as f32 + 2.0, end.1 as f32));
+
+            paint.set_color(Color::RED);
+            canvas.draw_path(&path, &paint);
+        }
 
         canvas.restore();
     }
