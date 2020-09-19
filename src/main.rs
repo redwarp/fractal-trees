@@ -11,6 +11,9 @@ mod night;
 mod tree;
 mod utils;
 
+const WIDTH: i32 = 1920;
+const HEIGHT: i32 = 1080;
+
 struct Painting<'a> {
     draw_fn: fn(&mut Canvas) -> (),
     output: &'a str,
@@ -26,7 +29,7 @@ fn main() -> Result<(), String> {
     ];
 
     for painting in &paintings {
-        match draw(painting.draw_fn, painting.output, (1920, 1080)) {
+        match draw(painting.draw_fn, painting.output, (WIDTH, HEIGHT)) {
             Err(e) => return Err(e),
             Ok(()) => (),
         };

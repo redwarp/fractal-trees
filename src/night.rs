@@ -26,16 +26,16 @@ impl Night {
     }
 
     fn random_star(rng: &mut StdRng) -> Star {
-        const COLORS: [Color; 5] = [
-            Palette::WHITE,
+        const STAR_COLORS: [Color; 5] = [
             Palette::DARK_GRAY,
             Palette::LIGHT_GRAY,
             Palette::BEIGE,
+            Palette::WHITE,
             Palette::RED,
         ];
         Star {
             position: (rng.gen_range(0.0, 1.0), rng.gen_range(0.0, 1.0)),
-            color: COLORS[rng.gen_range(0, COLORS.len())],
+            color: STAR_COLORS[rng.gen_range(0, STAR_COLORS.len())],
             radius: rng.gen_range(0.5, 1.0),
         }
     }
