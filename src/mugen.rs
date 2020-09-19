@@ -1,13 +1,12 @@
-use skia_safe::{Canvas, Color, Paint, PaintStyle, Path};
+use skia_safe::{Canvas, Paint, PaintStyle, Path};
 
-use crate::utils::Bounded;
+use crate::utils::{Bounded, Palette};
 
-const BACKGROUND_COLOR: Color = Color::new(0xfffceccb);
 const PRECISION: i32 = 128;
 const SCALE: f32 = 0.25;
 
 pub fn draw(canvas: &mut Canvas) {
-    canvas.clear(BACKGROUND_COLOR);
+    canvas.clear(Palette::BEIGE);
 
     let mut paint = Paint::default();
     paint.set_anti_alias(true);
@@ -32,11 +31,11 @@ pub fn draw(canvas: &mut Canvas) {
 
     canvas.save();
     canvas.translate((0.01, 0.01));
-    paint.set_color(Color::RED);
+    paint.set_color(Palette::RED);
     canvas.draw_path(&path, &paint);
     canvas.restore();
 
-    paint.set_color(Color::BLACK);
+    paint.set_color(Palette::BLACK);
     canvas.draw_path(&path, &paint);
 
     canvas.restore();

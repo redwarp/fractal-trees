@@ -1,12 +1,12 @@
 use skia_safe::{Canvas, Color, Matrix, Paint, Rect};
 
-use crate::utils::Bounded;
+use crate::utils::{Bounded, Palette};
 
 const ANG: f64 = 20.0;
 const BASE_LENGTH: f32 = 10.0;
-const SKY_COLOR: Color = Color::new(0xfffceccb);
-const TREE_AND_EARTH_COLOR: Color = Color::BLACK;
-const ROOT_COLOR: Color = Color::RED;
+const SKY_COLOR: Color = Palette::BEIGE;
+const TREE_AND_EARTH_COLOR: Color = Palette::BLACK;
+const ROOT_COLOR: Color = Palette::RED;
 const DEPTH: u32 = 10;
 const IDEAL_WIDTH: f32 = 1920.0;
 const IDEAL_HEIGHT: f32 = 1080.0;

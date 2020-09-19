@@ -1,9 +1,6 @@
-use crate::geometry::*;
-use crate::utils::Bounded;
+use crate::geometry::{Segment, VectorMove};
+use crate::utils::{Bounded, Palette};
 use skia_safe::{Canvas, Color, Paint, PaintStyle, Path, Point};
-
-const SKY_COLOR: Color = Color::new(0xfffceccb);
-const EARTH_COLOR: Color = Color::BLACK;
 
 pub fn draw(canvas: &mut Canvas) {
     let mut paint = Paint::default();
@@ -15,7 +12,7 @@ pub fn draw(canvas: &mut Canvas) {
     paint.set_style(PaintStyle::Fill);
     paint.set_stroke_width(height.min(width) / 100.0);
     // Fill with the sky color.
-    canvas.clear(SKY_COLOR);
+    canvas.clear(Palette::BEIGE);
 
     let base_origin = 0.57 * width;
     let base_length = 0.26 * width;
@@ -32,8 +29,8 @@ pub fn draw(canvas: &mut Canvas) {
         canvas,
         base,
         summit,
-        Color::new(0xff333333),
-        Color::WHITE,
+        Palette::LIGHT_GRAY,
+        Palette::WHITE,
         &mut paint,
     );
 
@@ -52,8 +49,8 @@ pub fn draw(canvas: &mut Canvas) {
         canvas,
         base,
         summit,
-        Color::new(0xff191919),
-        Color::WHITE,
+        Palette::DARK_GRAY,
+        Palette::WHITE,
         &mut paint,
     );
 
@@ -68,11 +65,18 @@ pub fn draw(canvas: &mut Canvas) {
     let summit = base
         .point_at_position(0.45)
         .move_along(base.normal(), -base.length() * 0.9);
-    draw_mountain(canvas, base, summit, EARTH_COLOR, Color::WHITE, &mut paint);
+    draw_mountain(
+        canvas,
+        base,
+        summit,
+        Palette::BLACK,
+        Palette::WHITE,
+        &mut paint,
+    );
 
     let sun_scale = width.min(height);
     let sun_position = (canvas.width() - sun_scale * 0.32, sun_scale * 0.32);
-    paint.set_color(Color::RED);
+    paint.set_color(Palette::RED);
     canvas.draw_circle(sun_position, sun_scale * 0.115, &paint);
 }
 

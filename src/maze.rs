@@ -5,11 +5,8 @@ use rand::{Rng, SeedableRng};
 use skia_safe::{Canvas, Color, Paint, PaintStyle, Path};
 
 use crate::geometry::Segment;
-use crate::utils::Bounded;
-use crate::utils::Drawable;
+use crate::utils::{Bounded, Drawable, Palette};
 
-/// Background color, rendered behind the maze.
-const BACKGROUND_COLOR: Color = Color::new(0xfffceccb);
 /// The higher the number, the less complex the maze.
 const MAZE_TO_PIXEL: f32 = 10.0;
 /// Adjust border to frame the maze in a nice way.
@@ -292,7 +289,7 @@ pub fn draw(canvas: &mut Canvas) {
     // Using a set seed to have a reproducable maze.
     let rng = StdRng::seed_from_u64(42);
 
-    canvas.clear(BACKGROUND_COLOR);
+    canvas.clear(Palette::BEIGE);
     let width = ((canvas.width() - MAZE_BORDER * 2.0) / MAZE_TO_PIXEL) as usize;
     let height = ((canvas.height() - MAZE_BORDER * 2.0) / MAZE_TO_PIXEL) as usize;
 
@@ -410,6 +407,7 @@ impl Drawable for Maze {
             path.move_to(segment.a());
             path.line_to(segment.b());
         }
+        paint.set_color(Palette::BLACK);
         canvas.draw_path(&path, &paint);
 
         // Draw solution.
@@ -422,7 +420,7 @@ impl Drawable for Maze {
             }
             path.line_to((end.0 as f32 + 2.0, end.1 as f32));
 
-            paint.set_color(Color::RED);
+            paint.set_color(Palette::RED);
             canvas.draw_path(&path, &paint);
         }
 

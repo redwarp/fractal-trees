@@ -5,6 +5,7 @@ use std::io::Write;
 use skia_safe::{Canvas, EncodedImageFormat, Paint, Surface};
 mod geometry;
 mod maze;
+mod moon;
 mod mountain;
 mod mugen;
 mod tree;
@@ -21,6 +22,7 @@ fn main() -> Result<(), String> {
         Painting::new(mountain::draw, "mountain"),
         Painting::new(maze::draw, "maze"),
         Painting::new(mugen::draw, "mugen"),
+        Painting::new(moon::draw, "moon"),
     ];
 
     for painting in &paintings {
