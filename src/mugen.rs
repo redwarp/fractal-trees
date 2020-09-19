@@ -4,7 +4,7 @@ use crate::utils::Bounded;
 
 const BACKGROUND_COLOR: Color = Color::new(0xfffceccb);
 const PRECISION: i32 = 128;
-const SCALE: f32 = 0.5;
+const SCALE: f32 = 0.25;
 
 pub fn draw(canvas: &mut Canvas) {
     canvas.clear(BACKGROUND_COLOR);
@@ -27,7 +27,7 @@ pub fn draw(canvas: &mut Canvas) {
 
     let center = (canvas.width() / 2.0, canvas.height() / 2.0);
     canvas.translate(center);
-    let scale = canvas.width().min(canvas.height()) * SCALE;
+    let scale = canvas.width().max(canvas.height()) * SCALE;
     canvas.scale((scale, scale));
 
     canvas.save();

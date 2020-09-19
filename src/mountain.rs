@@ -17,7 +17,14 @@ pub fn draw(canvas: &mut Canvas) {
     // Fill with the sky color.
     canvas.clear(SKY_COLOR);
 
-    let base = Segment::new(1100.0, canvas.height(), 1600.0, canvas.height());
+    let base_origin = 0.57 * width;
+    let base_length = 0.26 * width;
+    let base = Segment::new(
+        base_origin,
+        canvas.height(),
+        base_origin + base_length,
+        canvas.height(),
+    );
     let summit = base
         .point_at_position(0.45)
         .move_along(base.normal(), -base.length() * 0.9);
@@ -28,10 +35,16 @@ pub fn draw(canvas: &mut Canvas) {
         Color::new(0xff333333),
         Color::WHITE,
         &mut paint,
-        0,
     );
 
-    let base = Segment::new(700.0, canvas.height(), 1350.0, canvas.height());
+    let base_origin = 0.36 * width;
+    let base_length = 0.34 * width;
+    let base = Segment::new(
+        base_origin,
+        canvas.height(),
+        base_origin + base_length,
+        canvas.height(),
+    );
     let summit = base
         .point_at_position(0.45)
         .move_along(base.normal(), -base.length() * 0.9);
@@ -42,26 +55,25 @@ pub fn draw(canvas: &mut Canvas) {
         Color::new(0xff191919),
         Color::WHITE,
         &mut paint,
-        0,
     );
 
-    let base = Segment::new(200.0, canvas.height(), 1000.0, canvas.height());
+    let base_origin = 0.1 * width;
+    let base_length = 0.4 * width;
+    let base = Segment::new(
+        base_origin,
+        canvas.height(),
+        base_origin + base_length,
+        canvas.height(),
+    );
     let summit = base
         .point_at_position(0.45)
         .move_along(base.normal(), -base.length() * 0.9);
-    draw_mountain(
-        canvas,
-        base,
-        summit,
-        EARTH_COLOR,
-        Color::WHITE,
-        &mut paint,
-        0,
-    );
+    draw_mountain(canvas, base, summit, EARTH_COLOR, Color::WHITE, &mut paint);
 
-    let sun_position = (canvas.width() - 350.0, 350.0);
+    let sun_scale = width.min(height);
+    let sun_position = (canvas.width() - sun_scale * 0.32, sun_scale * 0.32);
     paint.set_color(Color::RED);
-    canvas.draw_circle(sun_position, 125.0, &paint);
+    canvas.draw_circle(sun_position, sun_scale * 0.115, &paint);
 }
 
 fn draw_mountain(
@@ -71,14 +83,8 @@ fn draw_mountain(
     dark_color: Color,
     light_color: Color,
     paint: &mut Paint,
-    count: u32,
 ) {
-    let color = if count % 2 == 1 {
-        light_color
-    } else {
-        dark_color
-    };
-    paint.set_color(color);
+    paint.set_color(dark_color);
 
     let mut path: Path = Path::new();
     path.move_to(base.a());
@@ -90,17 +96,18 @@ fn draw_mountain(
 
     canvas.draw_path(&path, paint);
 
-    if count < 2 {
-        let side_a = Segment::from_points(base.a(), summit).point_at_position(0.60);
-        let side_b = Segment::from_points(base.b(), summit).point_at_position(0.60);
-        draw_mountain(
-            canvas,
-            Segment::from_points(summit, side_a),
-            side_b,
-            dark_color,
-            light_color,
-            paint,
-            count + 1,
-        );
-    };
+    {
+        let snow_start = Segment::from_points(base.a(), summit).point_at_position(0.60);
+        let side = Segment::from_points(base.b(), summit).point_at_position(0.60);
+
+        let mut path = Path::new();
+        path.move_to(snow_start);
+        path.line_to(summit);
+        path.line_to(Segment::from_points(summit, side).point_at_position(0.60));
+        path.line_to(Segment::from_points(snow_start, side).point_at_position(0.60));
+        path.close();
+
+        paint.set_color(light_color);
+        canvas.draw_path(&path, paint);
+    }
 }
