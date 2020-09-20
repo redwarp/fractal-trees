@@ -29,7 +29,7 @@ pub fn draw(canvas: &mut Canvas) {
         canvas,
         base,
         summit,
-        Palette::LIGHT_GRAY,
+        Palette::GRAY,
         Palette::WHITE,
         &mut paint,
     );

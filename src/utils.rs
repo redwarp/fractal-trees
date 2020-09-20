@@ -30,6 +30,12 @@ impl Palette {
     /// A yellow beige, usually used for background.
     pub const BEIGE: Color = Color::new(0xfffceccb);
 
+    /// Darker beige, might come in handy.
+    pub const DARK_BEIGE: Color = Color::new(0xffc9bda3);
+
+    /// The darkerest of the beige.
+    pub const DARKER_BEIGE: Color = Color::new(0xff968d7a);
+
     /// A red, for details.
     pub const RED: Color = Color::RED;
 
@@ -40,7 +46,7 @@ impl Palette {
     pub const DARK_GRAY: Color = Color::new(0xff191919);
 
     /// Black -2.
-    pub const LIGHT_GRAY: Color = Color::new(0xff333333);
+    pub const GRAY: Color = Color::new(0xff333333);
 
     /// White, like javelized snow.
     pub const WHITE: Color = Color::WHITE;
