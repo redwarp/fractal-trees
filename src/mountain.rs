@@ -14,8 +14,13 @@ pub fn draw(canvas: &mut Canvas) {
     // Fill with the sky color.
     canvas.clear(Palette::BEIGE);
 
-    let base_origin = 0.57 * width;
+    canvas.save();
+
+    let base_origin = 0.47 * width;
     let base_length = 0.26 * width;
+
+    canvas.translate(((width - base_length - base_origin) / 2.0, 0.0));
+
     let base = Segment::new(
         base_origin,
         canvas.height(),
@@ -34,7 +39,7 @@ pub fn draw(canvas: &mut Canvas) {
         &mut paint,
     );
 
-    let base_origin = 0.36 * width;
+    let base_origin = 0.26 * width;
     let base_length = 0.34 * width;
     let base = Segment::new(
         base_origin,
@@ -54,7 +59,7 @@ pub fn draw(canvas: &mut Canvas) {
         &mut paint,
     );
 
-    let base_origin = 0.1 * width;
+    let base_origin = 0.0 * width;
     let base_length = 0.4 * width;
     let base = Segment::new(
         base_origin,
@@ -74,6 +79,7 @@ pub fn draw(canvas: &mut Canvas) {
         &mut paint,
     );
 
+    canvas.restore();
     let sun_scale = width.min(height);
     let sun_position = (canvas.width() - sun_scale * 0.32, sun_scale * 0.32);
     paint.set_color(Palette::RED);
