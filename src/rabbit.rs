@@ -49,11 +49,29 @@ impl Rabbits {
                 (3.0, 1.0, Palette::GRAY),
                 (3.0, 3.0, Palette::DARK_BEIGE),
             ],
-            PatternPosition::Corner => vec![(0.0, 0.0, Palette::GRAY)],
-            PatternPosition::Vertical => vec![(0.0, 0.0, Palette::GRAY), (2.0, 0.0, Palette::GRAY)],
-            PatternPosition::Horizontal => {
-                vec![(0.0, 0.0, Palette::GRAY), (0.0, 2.0, Palette::GRAY)]
-            }
+            PatternPosition::Corner => vec![
+                (0.0, 0.0, Palette::GRAY),
+                (0.0, 2.0, Palette::GRAY),
+                (2.0, 0.0, Palette::GRAY),
+                (2.0, 2.0, Palette::GRAY),
+                (1.0, 1.0, Palette::RED),
+            ],
+            PatternPosition::Vertical => vec![
+                (0.0, 0.0, Palette::GRAY),
+                (0.0, 2.0, Palette::GRAY),
+                (2.0, 0.0, Palette::GRAY),
+                (2.0, 2.0, Palette::GRAY),
+                (1.0, 1.0, Palette::RED),
+                (1.0, 3.0, Palette::GRAY),
+            ],
+            PatternPosition::Horizontal => vec![
+                (0.0, 0.0, Palette::GRAY),
+                (0.0, 2.0, Palette::GRAY),
+                (2.0, 0.0, Palette::GRAY),
+                (2.0, 2.0, Palette::GRAY),
+                (1.0, 1.0, Palette::RED),
+                (3.0, 1.0, Palette::GRAY),
+            ],
         };
         for (x, y, color) in &coords {
             Rabbits::draw_rabbit(
@@ -103,11 +121,11 @@ impl Drawable for Rabbits {
             ((canvas.height() / (4.0 * TINY_RABBIT_SIZE).floor()) as i32 - 1).max(0);
         let pattern_margin_top = (canvas.height()
             - (pattern_count_height * 4) as f32 * TINY_RABBIT_SIZE
-            - TINY_RABBIT_SIZE)
+            - TINY_RABBIT_SIZE * 3.0)
             / 2.0;
         let pattern_margin_left = (canvas.width()
             - (pattern_count_width * 4) as f32 * TINY_RABBIT_SIZE
-            - TINY_RABBIT_SIZE)
+            - TINY_RABBIT_SIZE * 3.0)
             / 2.0;
 
         if let (Some(body_path), Some(eyes_path)) = (body_path, eyes_path) {
@@ -125,8 +143,8 @@ impl Drawable for Rabbits {
                         (x, y) if (x, y) == (pattern_count_width, pattern_count_height) => {
                             PatternPosition::Corner
                         }
-                        (x, _) if x == pattern_count_width => PatternPosition::Horizontal,
-                        (_, y) if y == pattern_count_height => PatternPosition::Vertical,
+                        (x, _) if x == pattern_count_width => PatternPosition::Vertical,
+                        (_, y) if y == pattern_count_height => PatternPosition::Horizontal,
                         _ => PatternPosition::Full,
                     };
 
