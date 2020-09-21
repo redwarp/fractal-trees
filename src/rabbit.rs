@@ -1,9 +1,11 @@
 use crate::utils::{Bounded, Drawable, Palette};
-use skia_safe::{utils::parse_path::from_svg, Canvas, Color, Paint, Path};
+use skia_safe::{utils::parse_path::from_svg, Canvas, Color, Paint, Path, Rect};
 
 const RABBIT_SIZE: f32 = 240.0;
 const TINY_RABBIT_SCALE: f32 = 0.2;
 const TINY_RABBIT_SIZE: f32 = RABBIT_SIZE * TINY_RABBIT_SCALE;
+const STROKE_WIDTH: f32 = 4.0;
+const BORDER_SIZE: f32 = 80.0;
 
 const RABBIT_SVG: &str = "M122 75V25H125H148H151V75H170V175H70V75H89V25H92H115H118V75H122Z \
     M50 205L70 185V181H67H64V178V175H60L40 195H25V207.5H37.5V220H50V205Z \
@@ -106,6 +108,38 @@ impl Rabbits {
 
         canvas.restore();
     }
+
+    fn draw_border(canvas: &mut Canvas, paint: &mut Paint, border_paint: &mut Paint) {
+        paint.set_color(Palette::BEIGE);
+        canvas.draw_rect(Rect::new(0.0, 0.0, canvas.width(), BORDER_SIZE), &paint);
+        canvas.draw_rect(
+            Rect::new(
+                0.0,
+                canvas.height() - BORDER_SIZE,
+                canvas.width(),
+                canvas.height(),
+            ),
+            &paint,
+        );
+        canvas.draw_rect(Rect::new(0.0, 0.0, BORDER_SIZE, canvas.height()), &paint);
+        canvas.draw_rect(
+            Rect::new(
+                canvas.width() - BORDER_SIZE,
+                0.0,
+                canvas.width(),
+                canvas.height(),
+            ),
+            &paint,
+        );
+
+        let mut border_path = Path::new();
+        border_path.move_to((BORDER_SIZE, BORDER_SIZE));
+        border_path.line_to((canvas.width() - BORDER_SIZE, BORDER_SIZE));
+        border_path.line_to((canvas.width() - BORDER_SIZE, canvas.height() - BORDER_SIZE));
+        border_path.line_to((BORDER_SIZE, canvas.height() - BORDER_SIZE));
+        border_path.close();
+        canvas.draw_path(&border_path, &border_paint);
+    }
 }
 
 impl Drawable for Rabbits {
@@ -127,10 +161,16 @@ impl Drawable for Rabbits {
             - TINY_RABBIT_SIZE * 3.0)
             / 2.0;
 
-        if let (Some(body_path), Some(eyes_path)) = (body_path, eyes_path) {
-            let mut paint = Paint::default();
-            paint.set_anti_alias(true);
+        let mut paint = Paint::default();
+        paint.set_anti_alias(true);
 
+        let mut border_paint = Paint::default();
+        border_paint.set_anti_alias(true);
+        border_paint.set_color(Palette::BLACK);
+        border_paint.set_style(skia_safe::PaintStyle::Stroke);
+        border_paint.set_stroke_width(STROKE_WIDTH);
+
+        if let (Some(body_path), Some(eyes_path)) = (body_path, eyes_path) {
             canvas.save();
             canvas.translate((pattern_margin_left, pattern_margin_top));
             let (pattern_body, pattern_eyes) =
@@ -160,6 +200,7 @@ impl Drawable for Rabbits {
             }
             canvas.restore();
 
+            canvas.save();
             canvas.translate((
                 (canvas.width() - RABBIT_SIZE) / 2.0,
                 (canvas.height() - RABBIT_SIZE) / 2.0,
@@ -168,16 +209,12 @@ impl Drawable for Rabbits {
             paint.set_color(Palette::BEIGE);
             canvas.draw_circle(
                 (RABBIT_SIZE / 2.0, RABBIT_SIZE / 2.0),
-                RABBIT_SIZE * 0.75,
+                RABBIT_SIZE * 0.8,
                 &paint,
             );
-            let mut border_paint = paint.clone();
-            border_paint.set_color(Palette::BLACK);
-            border_paint.set_style(skia_safe::PaintStyle::Stroke);
-            border_paint.set_stroke_width(RABBIT_SIZE * 0.1);
             canvas.draw_circle(
                 (RABBIT_SIZE / 2.0, RABBIT_SIZE / 2.0),
-                RABBIT_SIZE * 0.75,
+                RABBIT_SIZE * 0.8,
                 &border_paint,
             );
 
@@ -186,7 +223,11 @@ impl Drawable for Rabbits {
 
             paint.set_color(Palette::WHITE);
             canvas.draw_path(&eyes_path, &paint);
+
+            canvas.restore();
         }
+
+        Rabbits::draw_border(canvas, &mut paint, &mut border_paint);
     }
 }
 
