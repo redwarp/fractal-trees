@@ -8,3 +8,6 @@ edition = "2018"
 skia-safe = "0.34.0"
 vector2d = "2.2.0"
 rand = "0.7.3"
+
+[profile.release]
+lto = true

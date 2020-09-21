@@ -1,10 +1,9 @@
 use crate::utils::{Bounded, Drawable, Palette};
 use skia_safe::{utils::parse_path::from_svg, Canvas, Color, Paint, Path};
 
-const RABBIT_WIDTH: f32 = 240.0;
-const RABBIT_HEIGHT: f32 = 240.0;
+const RABBIT_SIZE: f32 = 240.0;
 const TINY_RABBIT_SCALE: f32 = 0.2;
-const TINY_RABBIT_WIDTH: f32 = RABBIT_WIDTH * TINY_RABBIT_SCALE;
+const TINY_RABBIT_SIZE: f32 = RABBIT_SIZE * TINY_RABBIT_SCALE;
 
 const RABBIT_SVG: &str = "M122 75V25H125H148H151V75H170V175H70V75H89V25H92H115H118V75H122Z \
     M50 205L70 185V181H67H64V178V175H60L40 195H25V207.5H37.5V220H50V205Z \
@@ -17,6 +16,13 @@ const EYES_SVG: &str = "M85 115V135H105V115H85Z \
 
 struct Rabbits;
 
+enum PatternPosition {
+    Full,
+    Corner,
+    Vertical,
+    Horizontal,
+}
+
 impl Rabbits {
     fn draw_pattern(
         canvas: &mut Canvas,
@@ -25,29 +31,37 @@ impl Rabbits {
         x: i32,
         y: i32,
         paint: &mut Paint,
+        pattern_position: PatternPosition,
     ) {
         canvas.save();
         canvas.translate((
-            x as f32 * 4.0 * TINY_RABBIT_WIDTH,
-            y as f32 * 4.0 * TINY_RABBIT_WIDTH,
+            x as f32 * 4.0 * TINY_RABBIT_SIZE,
+            y as f32 * 4.0 * TINY_RABBIT_SIZE,
         ));
-        let coords: [(f32, f32, Color); 8] = [
-            (0.0, 0.0, Palette::BLACK),
-            (0.0, 2.0, Palette::BLACK),
-            (2.0, 0.0, Palette::BLACK),
-            (2.0, 2.0, Palette::BLACK),
-            (1.0, 1.0, Palette::RED),
-            (1.0, 3.0, Palette::RED),
-            (3.0, 1.0, Palette::RED),
-            (3.0, 3.0, Palette::RED),
-        ];
+        let coords: Vec<(f32, f32, Color)> = match pattern_position {
+            PatternPosition::Full => vec![
+                (0.0, 0.0, Palette::GRAY),
+                (0.0, 2.0, Palette::GRAY),
+                (2.0, 0.0, Palette::GRAY),
+                (2.0, 2.0, Palette::GRAY),
+                (1.0, 1.0, Palette::RED),
+                (1.0, 3.0, Palette::GRAY),
+                (3.0, 1.0, Palette::GRAY),
+                (3.0, 3.0, Palette::DARK_BEIGE),
+            ],
+            PatternPosition::Corner => vec![(0.0, 0.0, Palette::GRAY)],
+            PatternPosition::Vertical => vec![(0.0, 0.0, Palette::GRAY), (2.0, 0.0, Palette::GRAY)],
+            PatternPosition::Horizontal => {
+                vec![(0.0, 0.0, Palette::GRAY), (0.0, 2.0, Palette::GRAY)]
+            }
+        };
         for (x, y, color) in &coords {
             Rabbits::draw_rabbit(
                 canvas,
                 body,
                 eyes,
-                x * TINY_RABBIT_WIDTH,
-                y * TINY_RABBIT_WIDTH,
+                x * TINY_RABBIT_SIZE,
+                y * TINY_RABBIT_SIZE,
                 *color,
                 paint,
             );
@@ -83,29 +97,71 @@ impl Drawable for Rabbits {
         let body_path = from_svg(RABBIT_SVG);
         let eyes_path = from_svg(EYES_SVG);
 
+        let pattern_count_width =
+            ((canvas.width() / (4.0 * TINY_RABBIT_SIZE).floor()) as i32 - 1).max(0);
+        let pattern_count_height =
+            ((canvas.height() / (4.0 * TINY_RABBIT_SIZE).floor()) as i32 - 1).max(0);
+        let pattern_margin_top = (canvas.height()
+            - (pattern_count_height * 4) as f32 * TINY_RABBIT_SIZE
+            - TINY_RABBIT_SIZE)
+            / 2.0;
+        let pattern_margin_left = (canvas.width()
+            - (pattern_count_width * 4) as f32 * TINY_RABBIT_SIZE
+            - TINY_RABBIT_SIZE)
+            / 2.0;
+
         if let (Some(body_path), Some(eyes_path)) = (body_path, eyes_path) {
             let mut paint = Paint::default();
             paint.set_anti_alias(true);
 
+            canvas.save();
+            canvas.translate((pattern_margin_left, pattern_margin_top));
             let (pattern_body, pattern_eyes) =
                 resize_for_pattern(body_path.clone(), eyes_path.clone());
 
-            for x in 0..10 {
-                for y in 0..7 {
-                    Rabbits::draw_pattern(canvas, &pattern_body, &pattern_eyes, x, y, &mut paint);
+            for x in 0..pattern_count_width + 1 {
+                for y in 0..pattern_count_height + 1 {
+                    let position = match (x, y) {
+                        (x, y) if (x, y) == (pattern_count_width, pattern_count_height) => {
+                            PatternPosition::Corner
+                        }
+                        (x, _) if x == pattern_count_width => PatternPosition::Horizontal,
+                        (_, y) if y == pattern_count_height => PatternPosition::Vertical,
+                        _ => PatternPosition::Full,
+                    };
+
+                    Rabbits::draw_pattern(
+                        canvas,
+                        &pattern_body,
+                        &pattern_eyes,
+                        x,
+                        y,
+                        &mut paint,
+                        position,
+                    );
                 }
             }
+            canvas.restore();
 
             canvas.translate((
-                (canvas.width() - RABBIT_WIDTH) / 2.0,
-                (canvas.height() - RABBIT_HEIGHT) / 2.0,
+                (canvas.width() - RABBIT_SIZE) / 2.0,
+                (canvas.height() - RABBIT_SIZE) / 2.0,
             ));
 
             paint.set_color(Palette::BEIGE);
             canvas.draw_circle(
-                (RABBIT_WIDTH / 2.0, RABBIT_HEIGHT / 2.0),
-                RABBIT_WIDTH * 0.75,
+                (RABBIT_SIZE / 2.0, RABBIT_SIZE / 2.0),
+                RABBIT_SIZE * 0.75,
                 &paint,
+            );
+            let mut border_paint = paint.clone();
+            border_paint.set_color(Palette::BLACK);
+            border_paint.set_style(skia_safe::PaintStyle::Stroke);
+            border_paint.set_stroke_width(RABBIT_SIZE * 0.1);
+            canvas.draw_circle(
+                (RABBIT_SIZE / 2.0, RABBIT_SIZE / 2.0),
+                RABBIT_SIZE * 0.75,
+                &border_paint,
             );
 
             paint.set_color(Palette::BLACK);
