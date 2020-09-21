@@ -1,7 +1,6 @@
 use crate::utils::{Bounded, Drawable, Palette};
-use skia_safe::{Canvas, Color, Paint};
-
 use rand::{rngs::StdRng, Rng, SeedableRng};
+use skia_safe::{Canvas, Color, Paint};
 
 type Position = (f32, f32);
 

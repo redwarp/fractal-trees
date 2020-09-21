@@ -1,7 +1,6 @@
 use std::fmt::Display;
 
-use rand::rngs::StdRng;
-use rand::{Rng, SeedableRng};
+use rand::{rngs::StdRng, Rng, SeedableRng};
 use skia_safe::{Canvas, Paint, PaintStyle, Path};
 
 use crate::geometry::Segment;

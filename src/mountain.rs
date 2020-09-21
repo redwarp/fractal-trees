@@ -99,7 +99,6 @@ fn draw_mountain(
     let mut path: Path = Path::new();
     path.move_to(base.a());
     path.line_to(base.b());
-    println!("Segment: {:?}", base);
 
     path.line_to(summit);
     path.close();
