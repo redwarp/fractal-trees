@@ -115,16 +115,15 @@ impl Drawable for Rabbits {
         let body_path = from_svg(RABBIT_SVG);
         let eyes_path = from_svg(EYES_SVG);
 
-        let pattern_count_width =
-            ((canvas.width() / (4.0 * TINY_RABBIT_SIZE).floor()) as i32 - 1).max(0);
-        let pattern_count_height =
-            ((canvas.height() / (4.0 * TINY_RABBIT_SIZE).floor()) as i32 - 1).max(0);
+        let pattern_count_horizontal = ((canvas.width() / TINY_RABBIT_SIZE).floor() as i32 - 3) / 4;
+        let pattern_count_vertical = ((canvas.height() / TINY_RABBIT_SIZE).floor() as i32 - 3) / 4;
+
         let pattern_margin_top = (canvas.height()
-            - (pattern_count_height * 4) as f32 * TINY_RABBIT_SIZE
+            - (pattern_count_vertical * 4) as f32 * TINY_RABBIT_SIZE
             - TINY_RABBIT_SIZE * 3.0)
             / 2.0;
         let pattern_margin_left = (canvas.width()
-            - (pattern_count_width * 4) as f32 * TINY_RABBIT_SIZE
+            - (pattern_count_horizontal * 4) as f32 * TINY_RABBIT_SIZE
             - TINY_RABBIT_SIZE * 3.0)
             / 2.0;
 
@@ -137,14 +136,14 @@ impl Drawable for Rabbits {
             let (pattern_body, pattern_eyes) =
                 resize_for_pattern(body_path.clone(), eyes_path.clone());
 
-            for x in 0..pattern_count_width + 1 {
-                for y in 0..pattern_count_height + 1 {
+            for x in 0..pattern_count_horizontal + 1 {
+                for y in 0..pattern_count_vertical + 1 {
                     let position = match (x, y) {
-                        (x, y) if (x, y) == (pattern_count_width, pattern_count_height) => {
+                        (x, y) if (x, y) == (pattern_count_horizontal, pattern_count_vertical) => {
                             PatternPosition::Corner
                         }
-                        (x, _) if x == pattern_count_width => PatternPosition::Vertical,
-                        (_, y) if y == pattern_count_height => PatternPosition::Horizontal,
+                        (x, _) if x == pattern_count_horizontal => PatternPosition::Vertical,
+                        (_, y) if y == pattern_count_vertical => PatternPosition::Horizontal,
                         _ => PatternPosition::Full,
                     };
 
