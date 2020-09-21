@@ -2,8 +2,7 @@ use crate::utils::{Bounded, Drawable, Palette};
 use skia_safe::{utils::parse_path::from_svg, Canvas, Color, Paint, Path, Rect};
 
 const RABBIT_SIZE: f32 = 240.0;
-const TINY_RABBIT_SCALE: f32 = 0.2;
-const TINY_RABBIT_SIZE: f32 = RABBIT_SIZE * TINY_RABBIT_SCALE;
+const TINY_RABBIT_SIZE: f32 = 40.0;
 const STROKE_WIDTH: f32 = 4.0;
 const BORDER_SIZE: f32 = 80.0;
 
@@ -15,6 +14,14 @@ const RABBIT_SVG: &str = "M122 75V25H125H148H151V75H170V175H70V75H89V25H92H115H1
 const EYES_SVG: &str = "M85 115V135H105V115H85Z \
     M135 135V115H155V135H135Z \
     M100 160V150H140V160H100Z";
+const TINY_RABBIT_SVG: &str = "M21 13V4H22H24H25V13H28V29H12V13H15V4H16.5H17.5H19V13H21Z \
+    M8.5 34L12 30.5V30H11.3333H11V29.5V29H10.5L7 32.5H4.5V34.5H6.5V36.5H8.5V34Z \
+    M31.5 34L28 30.5V30H28.6667H29V29.5V29H29.5L33 32.5H35.5V34.5H33.5V36.5H31.5V34Z \
+    M31.5 8L28 11.5V12H28.6667H29V12.5V13H29.5L33 9.50001H35.5V7.5H33.5V5.5H31.5V8Z \
+    M8.5 8L12 11.5V12H11.3333H11V12.5V13H10.5L7 9.50001H4.5V7.5H6.5V5.5H8.5V8Z";
+const TINY_EYES_SVG: &str = "M14 19V22.5H17.5V19H14Z
+    M22.5 22.5V19L26 19V22.5L22.5 22.5Z
+    M16.5 26.5V25H23.5V26.5H20H16.5Z";
 
 struct Rabbits;
 
@@ -148,6 +155,8 @@ impl Drawable for Rabbits {
 
         let body_path = from_svg(RABBIT_SVG);
         let eyes_path = from_svg(EYES_SVG);
+        let tiny_body_path = from_svg(TINY_RABBIT_SVG);
+        let tiny_eyes_path = from_svg(TINY_EYES_SVG);
 
         let pattern_count_horizontal = ((canvas.width() / TINY_RABBIT_SIZE).floor() as i32 - 3) / 4;
         let pattern_count_vertical = ((canvas.height() / TINY_RABBIT_SIZE).floor() as i32 - 3) / 4;
@@ -170,11 +179,11 @@ impl Drawable for Rabbits {
         border_paint.set_style(skia_safe::PaintStyle::Stroke);
         border_paint.set_stroke_width(STROKE_WIDTH);
 
-        if let (Some(body_path), Some(eyes_path)) = (body_path, eyes_path) {
+        if let (Some(body_path), Some(eyes_path), Some(tiny_body_path), Some(tiny_eyes_path)) =
+            (body_path, eyes_path, tiny_body_path, tiny_eyes_path)
+        {
             canvas.save();
             canvas.translate((pattern_margin_left, pattern_margin_top));
-            let (pattern_body, pattern_eyes) =
-                resize_for_pattern(body_path.clone(), eyes_path.clone());
 
             for x in 0..pattern_count_horizontal + 1 {
                 for y in 0..pattern_count_vertical + 1 {
@@ -189,8 +198,8 @@ impl Drawable for Rabbits {
 
                     Rabbits::draw_pattern(
                         canvas,
-                        &pattern_body,
-                        &pattern_eyes,
+                        &tiny_body_path,
+                        &tiny_eyes_path,
                         x,
                         y,
                         &mut paint,
@@ -229,13 +238,6 @@ impl Drawable for Rabbits {
 
         Rabbits::draw_border(canvas, &mut paint, &mut border_paint);
     }
-}
-
-fn resize_for_pattern(mut body: Path, mut eyes: Path) -> (Path, Path) {
-    (
-        body.make_scale((TINY_RABBIT_SCALE, TINY_RABBIT_SCALE)),
-        eyes.make_scale((TINY_RABBIT_SCALE, TINY_RABBIT_SCALE)),
-    )
 }
 
 pub fn draw(canvas: &mut Canvas) {
