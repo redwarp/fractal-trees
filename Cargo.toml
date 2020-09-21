@@ -4,14 +4,7 @@ version = "0.1.0"
 authors = ["Benoît Vermont <redwarp@gmail.com>"]
 edition = "2018"
 
-[features]
-default = []
-shaper = ['skia-safe/shaper']
-svg = ['skia-safe/svg']
-vulkan = ['skia-safe/vulkan']
-
 [dependencies]
-skia-safe = { version = "0.34.0", features = [] }
+skia-safe = "0.34.0"
 vector2d = "2.2.0"
 rand = "0.7.3"
-

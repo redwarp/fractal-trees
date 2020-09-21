@@ -8,6 +8,7 @@ mod maze;
 mod mountain;
 mod mugen;
 mod night;
+mod rabbit;
 mod tree;
 mod utils;
 
@@ -26,6 +27,7 @@ fn main() -> Result<(), String> {
         Painting::new(maze::draw, "maze"),
         Painting::new(mugen::draw, "mugen"),
         Painting::new(night::draw, "night"),
+        Painting::new(rabbit::draw, "rabbit"),
     ];
 
     for painting in &paintings {
