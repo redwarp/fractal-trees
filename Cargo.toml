@@ -5,7 +5,7 @@ authors = ["Benoît Vermont <redwarp@gmail.com>"]
 edition = "2018"
 
 [dependencies]
-skia-safe = "0.34.0"
+skia-safe = "0.35.0"
 vector2d = "2.2.0"
 rand = "0.7.3"
 

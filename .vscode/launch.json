@@ -5,18 +5,19 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "(Windows) Launch",
-      "type": "cppvsdbg",
+      "type": "lldb",
       "request": "launch",
+      "name": "Launch",
+      "args": [],
       "program": "${workspaceFolder}/target/debug/fractal-trees",
       "windows": {
         "program": "${workspaceFolder}/target/debug/fractal-trees.exe"
-      },
-      "args": [],
-      "stopAtEntry": false,
+      },      
       "cwd": "${workspaceFolder}",
-      "environment": [],
-      "externalConsole": false,
+      "stopOnEntry": false,
+      "sourceLanguages": [
+        "rust"
+      ]
     }
   ]
 }

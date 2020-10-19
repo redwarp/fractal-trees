@@ -27,3 +27,7 @@ I need an excuse to learn #rust, and that could be it.
 ## Rabbit
 
 ![Rabbit](images/rabbit_1920x1080.png)
+
+## Hitomezashi
+
+![Hitomezashi](images/hitomezashi_1920x1080.png)
