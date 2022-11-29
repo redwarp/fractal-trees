@@ -33,10 +33,7 @@ fn main() -> Result<(), String> {
     ];
 
     for painting in &paintings {
-        match draw(painting.draw_fn, painting.output, (WIDTH, HEIGHT)) {
-            Err(e) => return Err(e),
-            Ok(()) => (),
-        };
+        draw(painting.draw_fn, painting.output, (WIDTH, HEIGHT))?;
     }
 
     Ok(())
@@ -57,11 +54,8 @@ fn draw(draw_fn: fn(&mut Canvas) -> (), output: &str, size: (i32, i32)) -> Resul
     draw_fn(canvas);
 
     // Save the result.
-
-    match create_dir_all("rendering") {
-        Err(_e) => return Err("ERROR: Coudn\'t create the `rendering` directory".to_string()),
-        Ok(()) => (),
-    }
+    create_dir_all("rendering")
+        .map_err(|_e| "ERROR: Coudn\'t create the `rendering` directory".to_string())?;
 
     let file_name = format!("rendering/{}_{}x{}.png", output, width, height);
     let mut file = match File::create(file_name) {
@@ -76,15 +70,8 @@ fn draw(draw_fn: fn(&mut Canvas) -> (), output: &str, size: (i32, i32)) -> Resul
     let image = surface.image_snapshot();
     match image.encode_to_data(EncodedImageFormat::PNG) {
         Some(data) => {
-            match file.write_all(data.as_bytes()) {
-                Err(_e) => {
-                    return Err(format!(
-                        "ERROR: failed to write in the file `{}.png`",
-                        output
-                    ))
-                }
-                Ok(()) => (),
-            };
+            file.write_all(data.as_bytes())
+                .map_err(|_e| format!("ERROR: failed to write in the file `{}.png`", output))?;
         }
         None => {
             return Err("ERROR: failed to encode image as PNG.".to_string());

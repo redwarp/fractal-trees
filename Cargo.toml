@@ -2,12 +2,9 @@
 name = "fractal-trees"
 version = "0.1.0"
 authors = ["Benoît Vermont <redwarp@gmail.com>"]
-edition = "2018"
+edition = "2021"
 
 [dependencies]
-skia-safe = "0.35.0"
-vector2d = "2.2.0"
-rand = "0.7.3"
-
-[profile.release]
-lto = true
+skia-safe = "0.55"
+vector2d = "2.2"
+rand = "0.7"

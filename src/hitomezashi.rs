@@ -107,7 +107,7 @@ impl Drawable for Hitomezashi {
             bottom: self.vertical.len() as f32,
         };
         paint.set_color(Palette::BLACK);
-        canvas.draw_rect(&outer_rect, &paint);
+        canvas.draw_rect(outer_rect, &paint);
 
         canvas.restore();
     }
@@ -181,7 +181,7 @@ impl Line {
                 return true;
             }
         }
-        return false;
+        false
     }
 
     fn append_line(&mut self, line: &Line) -> bool {
@@ -210,7 +210,7 @@ impl Line {
             return true;
         }
 
-        return false;
+        false
     }
 }
 
@@ -227,7 +227,7 @@ fn segments_to_paths(segments: &Vec<Segment>) -> Vec<Path> {
         }
 
         if !appended {
-            all_lines.push(Line::new(segment.clone()));
+            all_lines.push(Line::new(*segment));
         }
     }
     let count = all_lines

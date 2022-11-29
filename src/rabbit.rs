@@ -122,7 +122,7 @@ impl Rabbits {
 
     fn draw_border(canvas: &mut Canvas, paint: &mut Paint, border_paint: &mut Paint) {
         paint.set_color(Palette::BEIGE);
-        canvas.draw_rect(Rect::new(0.0, 0.0, canvas.width(), BORDER_SIZE), &paint);
+        canvas.draw_rect(Rect::new(0.0, 0.0, canvas.width(), BORDER_SIZE), paint);
         canvas.draw_rect(
             Rect::new(
                 0.0,
@@ -130,9 +130,9 @@ impl Rabbits {
                 canvas.width(),
                 canvas.height(),
             ),
-            &paint,
+            paint,
         );
-        canvas.draw_rect(Rect::new(0.0, 0.0, BORDER_SIZE, canvas.height()), &paint);
+        canvas.draw_rect(Rect::new(0.0, 0.0, BORDER_SIZE, canvas.height()), paint);
         canvas.draw_rect(
             Rect::new(
                 canvas.width() - BORDER_SIZE,
@@ -140,7 +140,7 @@ impl Rabbits {
                 canvas.width(),
                 canvas.height(),
             ),
-            &paint,
+            paint,
         );
 
         let mut border_path = Path::new();
@@ -149,7 +149,7 @@ impl Rabbits {
         border_path.line_to((canvas.width() - BORDER_SIZE, canvas.height() - BORDER_SIZE));
         border_path.line_to((BORDER_SIZE, canvas.height() - BORDER_SIZE));
         border_path.close();
-        canvas.draw_path(&border_path, &border_paint);
+        canvas.draw_path(&border_path, border_paint);
     }
 }
 

@@ -46,17 +46,17 @@ impl Segment {
         Point::new(self.xb, self.yb)
     }
 
-    pub fn to_vector2d(&self) -> Vector2D<f32> {
+    pub fn as_vector2d(&self) -> Vector2D<f32> {
         Vector2D::new(self.xb - self.xa, self.yb - self.ya)
     }
 
     pub fn normal(&self) -> Vector2D<f32> {
-        let vector: Vector2D<f32> = self.to_vector2d();
+        let vector: Vector2D<f32> = self.as_vector2d();
         vector.normal()
     }
 
     pub fn length(&self) -> f32 {
-        self.to_vector2d().length()
+        self.as_vector2d().length()
     }
 }
 

@@ -235,7 +235,7 @@ impl Maze {
 
         match unvisited.len() {
             0 => None,
-            _ => Some(unvisited.first().unwrap().clone()),
+            _ => Some(*unvisited.first().unwrap()),
         }
     }
 
@@ -260,7 +260,7 @@ impl Maze {
                 }
             }
         }
-        if start == None {
+        if start.is_none() {
             return self;
         }
 

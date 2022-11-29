@@ -1,4 +1,4 @@
-use skia_safe::{Canvas, Color, Matrix, Paint, Rect};
+use skia_safe::{Canvas, Color, Paint, Rect, M44};
 
 use crate::utils::{Bounded, Palette};
 
@@ -58,9 +58,9 @@ pub fn draw(canvas: &mut Canvas) {
     let scale = canvas.height() / height;
     let shift_x = -(width * scale - canvas.width()) / 2.0;
 
-    let mut matrix = Matrix::new_identity();
-    matrix.post_scale((scale, scale), None);
-    matrix.post_translate((shift_x, 0.0));
+    let mut matrix = M44::new_identity();
+    matrix.set_scale(scale, scale, 1.0);
+    matrix.post_translate(shift_x, 0.0, None);
     canvas.set_matrix(&matrix);
 
     // Draw the ground.
@@ -80,7 +80,7 @@ pub fn draw(canvas: &mut Canvas) {
         paint.set_stroke_width((depth as f32).powf(1.1));
         let first = (x1 as f32, y1 as f32);
         let second = (x2 as f32, y2 as f32);
-        canvas.draw_line(first, second, &paint);
+        canvas.draw_line(first, second, paint);
     };
 
     parse_fractal_tree(
