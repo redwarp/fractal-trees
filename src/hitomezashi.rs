@@ -122,7 +122,6 @@ pub fn draw(canvas: &mut Canvas) {
     let height = ((canvas.height() - BORDER * 2.0) / TO_PIXEL_RATIO) as usize;
 
     let hitomezashi = Hitomezashi::with_random(width, height, &mut rng);
-    // let hitomezashi = Hitomezashi::with_random(10, 10, &mut rng);
 
     hitomezashi.draw(canvas);
 }

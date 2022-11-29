@@ -7,4 +7,4 @@ edition = "2021"
 [dependencies]
 skia-safe = "0.55"
 vector2d = "2.2"
-rand = "0.7"
+rand = "0.8"

@@ -110,8 +110,8 @@ impl Maze {
         let mut cell_positions: Vec<Position> = Vec::new();
         // Initialize first cell position.
         cell_positions.push(Position(
-            rng.gen_range(0, self.width),
-            rng.gen_range(0, self.height),
+            rng.gen_range(0..self.width),
+            rng.gen_range(0..self.height),
         ));
 
         while !cell_positions.is_empty() {
@@ -197,13 +197,13 @@ impl Maze {
 
         match unvisited.len() {
             0 => None,
-            _ => Some(unvisited[rng.gen_range(0, unvisited.len())]),
+            _ => Some(unvisited[rng.gen_range(0..unvisited.len())]),
         }
     }
 
     fn collapse_entry_and_exit(mut self, rng: &mut StdRng) -> Self {
-        let west_wall = rng.gen_range(0, self.height);
-        let east_wall = rng.gen_range(0, self.height);
+        let west_wall = rng.gen_range(0..self.height);
+        let east_wall = rng.gen_range(0..self.height);
 
         if let Some(cell) = self.get_any_cell_mut(0, (west_wall * 2 + 1) as usize) {
             cell.cell_type = CellType::Floor;

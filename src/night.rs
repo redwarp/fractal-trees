@@ -54,18 +54,18 @@ impl Night {
             Palette::RED,
         ];
         Star {
-            position: (rng.gen_range(0.0, 1.0), rng.gen_range(0.0, 1.0)),
-            color: STAR_COLORS[rng.gen_range(0, STAR_COLORS.len())],
-            radius: rng.gen_range(0.4, 1.0),
+            position: (rng.gen_range(0.0..1.0), rng.gen_range(0.0..1.0)),
+            color: STAR_COLORS[rng.gen_range(0..STAR_COLORS.len())],
+            radius: rng.gen_range(0.4..1.0),
         }
     }
 
     fn random_spot(rng: &mut StdRng) -> Spot {
         Spot {
-            placement: rng.gen_range(0.0, 1.0),
-            angle: rng.gen_range(0.0, 1.0),
-            radius: rng.gen_range(0.2, 1.0),
-            color: match rng.gen_range(0.0, 1.0) {
+            placement: rng.gen_range(0.0..1.0),
+            angle: rng.gen_range(0.0..1.0),
+            radius: rng.gen_range(0.2..1.0),
+            color: match rng.gen_range(0.0..1.0) {
                 random if random < 0.45 => Palette::BEIGE,
                 random if random < 0.90 => Palette::DARK_BEIGE,
                 _ => Palette::DARKER_BEIGE,
